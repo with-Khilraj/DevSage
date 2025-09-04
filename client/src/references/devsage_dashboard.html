@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - AI Developer Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Progress bar animations */
+        .progress-bar {
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .progress-fill {
+            transition: width 1s ease-in-out;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        /* Mobile responsive utilities */
+        .mobile-hide { display: block; }
+        @media (max-width: 768px) {
+            .mobile-hide { display: none; }
+            .mobile-show { display: block !important; }
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online { background: #10b981; }
+        .status-sync { background: #f59e0b; animation: pulse 2s infinite; }
+        .status-offline { background: #ef4444; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header (Fixed Top Bar) -->
+    <header class="fixed top-0 w-full h-16 glass-dark z-50">
+        <div class="flex items-center justify-between px-6 h-full">
+            <!-- Logo and Mobile Menu -->
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-white hover:text-blue-400 transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-xl">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold">DevSage</h1>
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="hidden md:flex flex-1 max-w-md mx-8">
+                <div class="relative w-full">
+                    <input type="text" placeholder="Search repos, PRs, commits..." 
+                           class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 pl-10 text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:border-blue-400">
+                    <i class="fas fa-search absolute left-3 top-3 text-white text-opacity-60"></i>
+                </div>
+            </div>
+            
+            <!-- User Profile & Controls -->
+            <div class="flex items-center gap-4">
+                <!-- Offline Mode Toggle -->
+                <div class="hidden md:flex items-center gap-2">
+                    <span class="text-sm text-white text-opacity-80">Offline</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-white bg-opacity-20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                
+                <!-- User Profile Dropdown -->
+                <div class="flex items-center gap-3 glass rounded-full px-4 py-2 hover-lift cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=100&h=100&fit=crop&crop=face" 
+                         alt="Sarah Chen" class="w-8 h-8 rounded-full object-cover">
+                    <div class="hidden md:block">
+                        <p class="text-sm font-medium">Sarah Chen</p>
+                        <p class="text-xs text-white text-opacity-70">Senior Developer</p>
+                    </div>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <div class="flex pt-16 min-h-screen">
+        <!-- Sidebar (Left Panel) -->
+        <aside class="w-64 glass-dark mobile-hide border-r border-white border-opacity-10">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white bg-opacity-10 text-white hover-lift">
+                        <i class="fas fa-home w-5"></i>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-code-branch w-5"></i>
+                        <span>PRs & Commits</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-lightbulb w-5"></i>
+                        <span>Code Suggestions</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Team Insights</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-file-alt w-5"></i>
+                        <span>Changelogs</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-cog w-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+                
+                <!-- Platform Status -->
+                <div class="mt-8 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Connected Platforms</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fab fa-github"></i>
+                                <span class="text-sm">GitHub</span>
+                            </div>
+                            <div class="status-dot status-online"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fab fa-gitlab"></i>
+                                <span class="text-sm">GitLab</span>
+                            </div>
+                            <div class="status-dot status-sync"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fab fa-bitbucket"></i>
+                                <span class="text-sm">Bitbucket</span>
+                            </div>
+                            <div class="status-dot status-online"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow overflow-y-auto pb-8">
+            <div class="p-6">
+                <!-- Welcome Section -->
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold mb-2">Welcome back, Sarah! 👋</h2>
+                    <p class="text-white text-opacity-80">Here's what's happening with your projects today.</p>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Metric Card: Commits -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-green-500 to-emerald-500 p-3 rounded-xl">
+                                <i class="fas fa-code-branch text-white text-xl"></i>
+                            </div>
+                            <span class="text-green-400 text-sm font-medium flex items-center gap-1">
+                                <i class="fas fa-arrow-up"></i>
+                                +8.2%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">24</h3>
+                        <p class="text-white text-opacity-70 text-sm">Commits Today</p>
+                        <div class="mt-4">
+                            <div class="progress-bar h-2 rounded-full">
+                                <div class="progress-fill h-full rounded-full" style="width: 85%"></div>
+                            </div>
+                            <p class="text-xs text-white text-opacity-60 mt-1">85% auto-generated</p>
+                        </div>
+                    </div>
+
+                    <!-- Metric Card: Code Quality -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in" style="animation-delay: 0.1s">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-xl">
+                                <i class="fas fa-star text-white text-xl"></i>
+                            </div>
+                            <span class="text-blue-400 text-sm font-medium flex items-center gap-1">
+                                <i class="fas fa-arrow-up"></i>
+                                +2.1%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">94%</h3>
+                        <p class="text-white text-opacity-70 text-sm">Code Quality Score</p>
+                        <div class="mt-4">
+                            <div class="progress-bar h-2 rounded-full">
+                                <div class="progress-fill h-full rounded-full" style="width: 94%"></div>
+                            </div>
+                            <p class="text-xs text-white text-opacity-60 mt-1">Excellent rating</p>
+                        </div>
+                    </div>
+
+                    <!-- Metric Card: Open PRs -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-xl">
+                                <i class="fas fa-code-pull-request text-white text-xl"></i>
+                            </div>
+                            <span class="text-red-400 text-sm font-medium flex items-center gap-1">
+                                <i class="fas fa-arrow-down"></i>
+                                -1.5%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">7</h3>
+                        <p class="text-white text-opacity-70 text-sm">Open Pull Requests</p>
+                        <div class="mt-4 flex -space-x-2">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full border-2 border-white">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full border-2 border-white">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full border-2 border-white">
+                            <span class="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-xs border-2 border-white">+4</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric Card: Suggestions -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 p-3 rounded-xl">
+                                <i class="fas fa-lightbulb text-white text-xl"></i>
+                            </div>
+                            <span class="text-orange-400 text-sm font-medium flex items-center gap-1">
+                                <i class="fas fa-arrow-up"></i>
+                                +12.3%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">18</h3>
+                        <p class="text-white text-opacity-70 text-sm">AI Suggestions</p>
+                        <div class="mt-4 flex gap-2">
+                            <span class="bg-red-500 bg-opacity-20 text-red-300 px-2 py-1 rounded text-xs">3 Critical</span>
+                            <span class="bg-yellow-500 bg-opacity-20 text-yellow-300 px-2 py-1 rounded text-xs">15 Minor</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- PRs & Commits Section -->
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-3">
+                                <i class="fas fa-code-branch text-blue-400"></i>
+                                PRs & Commits
+                            </h3>
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                <i class="fas fa-plus mr-2"></i>New PR
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- PR Preview Card -->
+                            <div class="glass-dark rounded-xl p-4 hover-lift">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-green-500 px-2 py-1 rounded text-xs font-medium">READY</span>
+                                        <span class="text-sm text-white text-opacity-60">#PR-1247</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full">
+                                        <span class="text-sm text-white text-opacity-80">Alex Rodriguez</span>
+                                    </div>
+                                </div>
+                                <h4 class="font-medium mb-2">feat: implement user authentication with JWT tokens</h4>
+                                <p class="text-sm text-white text-opacity-70 mb-4">Added secure JWT-based authentication system with refresh token rotation and role-based access control. Includes middleware for route protection and session management.</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex gap-2">
+                                        <button class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-1 rounded text-sm transition-colors">
+                                            <i class="fas fa-edit mr-1"></i>Edit
+                                        </button>
+                                        <button class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-sm transition-colors">
+                                            <i class="fas fa-arrow-up mr-1"></i>Push
+                                        </button>
+                                    </div>
+                                    <span class="text-xs text-white text-opacity-60">2 hours ago</span>
+                                </div>
+                            </div>
+
+                            <!-- Another PR Card -->
+                            <div class="glass-dark rounded-xl p-4 hover-lift">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-yellow-500 px-2 py-1 rounded text-xs font-medium">DRAFT</span>
+                                        <span class="text-sm text-white text-opacity-60">#PR-1248</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full">
+                                        <span class="text-sm text-white text-opacity-80">Sarah Chen</span>
+                                    </div>
+                                </div>
+                                <h4 class="font-medium mb-2">refactor: optimize database queries for performance</h4>
+                                <p class="text-sm text-white text-opacity-70 mb-4">Improved query performance by adding proper indexing and optimizing N+1 query patterns. Reduced average response time by 40%.</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex gap-2">
+                                        <button class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-1 rounded text-sm transition-colors">
+                                            <i class="fas fa-edit mr-1"></i>Edit
+                                        </button>
+                                        <button class="bg-gray-500 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors">
+                                            <i class="fas fa-save mr-1"></i>Save Draft
+                                        </button>
+                                    </div>
+                                    <span class="text-xs text-white text-opacity-60">4 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Code Suggestions Panel -->
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-3">
+                                <i class="fas fa-magic text-purple-400"></i>
+                                AI Code Suggestions
+                            </h3>
+                            <select class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-sm text-white">
+                                <option>All Types</option>
+                                <option>Performance</option>
+                                <option>Security</option>
+                                <option>Maintainability</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Critical Suggestion -->
+                            <div class="glass-dark rounded-xl p-4 hover-lift border-l-4 border-red-500">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="bg-red-500 px-2 py-1 rounded text-xs font-medium">CRITICAL</span>
+                                    <span class="text-sm text-white text-opacity-60">auth.js:142</span>
+                                </div>
+                                <h4 class="font-medium mb-2">SQL Injection Vulnerability Detected</h4>
+                                <p class="text-sm text-white text-opacity-70 mb-4">Direct string concatenation in SQL query can lead to SQL injection attacks. Use parameterized queries or ORM methods instead.</p>
+                                <div class="bg-gray-800 bg-opacity-50 rounded p-3 mb-4">
+                                    <code class="text-sm text-red-300">query = "SELECT * FROM users WHERE id = " + userId;</code>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-check mr-1"></i>Accept
+                                    </button>
+                                    <button class="bg-gray-500 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-times mr-1"></i>Reject
+                                    </button>
+                                    <button class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-info mr-1"></i>Details
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Performance Suggestion -->
+                            <div class="glass-dark rounded-xl p-4 hover-lift border-l-4 border-yellow-500">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="bg-yellow-500 px-2 py-1 rounded text-xs font-medium">PERFORMANCE</span>
+                                    <span class="text-sm text-white text-opacity-60">utils.js:89</span>
+                                </div>
+                                <h4 class="font-medium mb-2">Optimize Array Processing</h4>
+                                <p class="text-sm text-white text-opacity-70 mb-4">Consider using Array.map() instead of forEach for better performance and functional programming style.</p>
+                                <div class="flex gap-2">
+                                    <button class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-check mr-1"></i>Accept
+                                    </button>
+                                    <button class="bg-gray-500 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-times mr-1"></i>Reject
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Maintainability Suggestion -->
+                            <div class="glass-dark rounded-xl p-4 hover-lift border-l-4 border-blue-500">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="bg-blue-500 px-2 py-1 rounded text-xs font-medium">MAINTAINABILITY</span>
+                                    <span class="text-sm text-white text-opacity-60">config.js:23</span>
+                                </div>
+                                <h4 class="font-medium mb-2">Extract Magic Numbers</h4>
+                                <p class="text-sm text-white text-opacity-70 mb-4">Replace hardcoded timeout value (5000) with a named constant for better maintainability.</p>
+                                <div class="flex gap-2">
+                                    <button class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-check mr-1"></i>Accept
+                                    </button>
+                                    <button class="bg-gray-500 hover:bg-gray-600 px-3 py-1 rounded text-sm transition-colors">
+                                        <i class="fas fa-times mr-1"></i>Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Insights & Changelogs Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <!-- Team Insights Dashboard -->
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <h3 class="text-xl font-bold flex items-center gap-3 mb-6">
+                            <i class="fas fa-chart-line text-green-400"></i>
+                            Team Insights
+                        </h3>
+                        
+                        <!-- Code Quality Metrics -->
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium">Test Coverage</span>
+                                    <span class="text-sm text-green-400 font-medium">87%</span>
+                                </div>
+                                <div class="progress-bar h-3 rounded-full">
+                                    <div class="progress-fill h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500" style="width: 87%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium">Code Review Rate</span>
+                                    <span class="text-sm text-blue-400 font-medium">94%</span>
+                                </div>
+                                <div class="progress-bar h-3 rounded-full">
+                                    <div class="progress-fill h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500" style="width: 94%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium">Documentation Coverage</span>
+                                    <span class="text-sm text-yellow-400 font-medium">73%</span>
+                                </div>
+                                <div class="progress-bar h-3 rounded-full">
+                                    <div class="progress-fill h-full rounded-full bg-gradient-to-r from-yellow-500 to-orange-500" style="width: 73%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Team Activity -->
+                        <div class="mt-6">
+                            <h4 class="text-sm font-medium mb-3">Team Activity (This Week)</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full">
+                                        <span class="text-sm">Alex Rodriguez</span>
+                                    </div>
+                                    <span class="text-sm text-white text-opacity-70">23 commits</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full">
+                                        <span class="text-sm">Sarah Chen</span>
+                                    </div>
+                                    <span class="text-sm text-white text-opacity-70">18 commits</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full">
+                                        <span class="text-sm">Mike Johnson</span>
+                                    </div>
+                                    <span class="text-sm text-white text-opacity-70">15 commits</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Changelogs View -->
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-3">
+                                <i class="fas fa-file-alt text-orange-400"></i>
+                                Recent Changelogs
+                            </h3>
+                            <button class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Generate
+                            </button>
+                        </div>
+                        
+                        <!-- Changelog Accordion -->
+                        <div class="space-y-3">
+                            <!-- Version 2.1.0 -->
+                            <div class="glass-dark rounded-xl overflow-hidden">
+                                <div class="p-4 cursor-pointer hover:bg-white hover:bg-opacity-5 transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium">v2.1.0 - Authentication System</h4>
+                                            <p class="text-sm text-white text-opacity-70">Released 2 days ago</p>
+                                        </div>
+                                        <i class="fas fa-chevron-down text-white text-opacity-60"></i>
+                                    </div>
+                                </div>
+                                <div class="px-4 pb-4 border-t border-white border-opacity-10">
+                                    <div class="mt-3 space-y-2">
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-green-500 px-2 py-1 rounded text-xs font-medium mt-0.5">FEATURE</span>
+                                            <span class="text-sm">JWT-based authentication system</span>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-green-500 px-2 py-1 rounded text-xs font-medium mt-0.5">FEATURE</span>
+                                            <span class="text-sm">Role-based access control</span>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-blue-500 px-2 py-1 rounded text-xs font-medium mt-0.5">IMPROVEMENT</span>
+                                            <span class="text-sm">Enhanced session management</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Version 2.0.1 -->
+                            <div class="glass-dark rounded-xl p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">v2.0.1 - Bug Fixes</h4>
+                                        <p class="text-sm text-white text-opacity-70">Released 1 week ago</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-white text-opacity-60"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Version 2.0.0 -->
+                            <div class="glass-dark rounded-xl p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">v2.0.0 - Major Release</h4>
+                                        <p class="text-sm text-white text-opacity-70">Released 3 weeks ago</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-red-500 px-2 py-1 rounded text-xs font-medium">BREAKING</span>
+                                        <i class="fas fa-chevron-right text-white text-opacity-60"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multimodal Input Section -->
+                <div class="mt-6">
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <h3 class="text-xl font-bold flex items-center gap-3 mb-6">
+                            <i class="fas fa-microphone text-purple-400"></i>
+                            Multimodal Input
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Text Input -->
+                            <div class="glass-dark rounded-xl p-4 text-center hover-lift cursor-pointer">
+                                <div class="bg-blue-500 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-keyboard text-white text-xl"></i>
+                                </div>
+                                <h4 class="font-medium mb-2">Text Commands</h4>
+                                <p class="text-sm text-white text-opacity-70">Type natural language instructions</p>
+                            </div>
+                            
+                            <!-- Voice Input -->
+                            <div class="glass-dark rounded-xl p-4 text-center hover-lift cursor-pointer">
+                                <div class="bg-purple-500 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-microphone text-white text-xl"></i>
+                                </div>
+                                <h4 class="font-medium mb-2">Voice Commands</h4>
+                                <p class="text-sm text-white text-opacity-70">Speak your instructions</p>
+                                <div class="mt-3">
+                                    <button class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                        <i class="fas fa-play mr-2"></i>Start Recording
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Upload -->
+                            <div class="glass-dark rounded-xl p-4 text-center hover-lift cursor-pointer">
+                                <div class="bg-green-500 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-image text-white text-xl"></i>
+                                </div>
+                                <h4 class="font-medium mb-2">Image Analysis</h4>
+                                <p class="text-sm text-white text-opacity-70">Upload sketches or mockups</p>
+                                <div class="mt-3">
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                        <i class="fas fa-upload mr-2"></i>Upload Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="mt-6 p-4 glass-dark rounded-xl">
+                            <h4 class="font-medium mb-3">Quick Actions</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors">
+                                    "Generate commit message for current changes"
+                                </button>
+                                <button class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors">
+                                    "Create PR for feature branch"
+                                </button>
+                                <button class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors">
+                                    "Analyze code quality"
+                                </button>
+                                <button class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors">
+                                    "Generate changelog for v2.2.0"
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer (Fixed Bottom Bar) -->
+    <footer class="fixed bottom-0 w-full h-8 glass-dark z-40">
+        <div class="flex items-center justify-between px-6 h-full text-xs">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="status-dot status-online"></div>
+                    <span class="text-white text-opacity-70">DevSage v2.1.0</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="status-dot status-sync"></div>
+                    <span class="text-white text-opacity-70">Analyzing code...</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <span class="text-white text-opacity-60">Offline queue: 3 operations</span>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-wifi text-green-400"></i>
+                    <span class="text-white text-opacity-70">Connected</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation (shown only on mobile) -->
+    <div class="md:hidden fixed bottom-8 left-4 right-4 glass rounded-2xl p-4 z-30">
+        <div class="flex justify-around items-center">
+            <button class="flex flex-col items-center gap-1 text-white">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-xs">Home</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-white text-opacity-60">
+                <i class="fas fa-code-branch text-lg"></i>
+                <span class="text-xs">PRs</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-white text-opacity-60">
+                <i class="fas fa-lightbulb text-lg"></i>
+                <span class="text-xs">Suggestions</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-white text-opacity-60">
+                <i class="fas fa-chart-line text-lg"></i>
+                <span class="text-xs">Insights</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-white text-opacity-60">
+                <i class="fas fa-cog text-lg"></i>
+                <span class="text-xs">Settings</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard interactions and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars on load
+            setTimeout(() => {
+                const progressBars = document.querySelectorAll('.progress-fill');
+                progressBars.forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 500);
+
+            // Simulate real-time updates
+            let commitCount = 24;
+            const commitCounter = document.querySelector('.grid .glass h3');
+            
+            setInterval(() => {
+                if (Math.random() > 0.95) { // 5% chance every second
+                    commitCount++;
+                    // Update would happen here in real implementation
+                    console.log(`New commit detected. Total: ${commitCount}`);
+                }
+            }, 1000);
+
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.md\\:hidden button');
+            const sidebar = document.querySelector('aside');
+            
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('mobile-hide');
+                    sidebar.classList.toggle('mobile-show');
+                });
+            }
+
+            // Offline toggle simulation
+            const offlineToggle = document.querySelector('input[type="checkbox"]');
+            const statusIndicators = document.querySelectorAll('.status-dot');
+            
+            if (offlineToggle) {
+                offlineToggle.addEventListener('change', (e) => {
+                    const footer = document.querySelector('footer');
+                    if (e.target.checked) {
+                        // Offline mode
+                        statusIndicators.forEach(dot => {
+                            if (dot.classList.contains('status-online')) {
+                                dot.classList.remove('status-online');
+                                dot.classList.add('status-offline');
+                            }
+                        });
+                        footer.querySelector('.fa-wifi').classList.replace('text-green-400', 'text-red-400');
+                        footer.querySelector('.fa-wifi').nextElementSibling.textContent = 'Offline';
+                    } else {
+                        // Online mode
+                        statusIndicators.forEach(dot => {
+                            if (dot.classList.contains('status-offline')) {
+                                dot.classList.remove('status-offline');
+                                dot.classList.add('status-online');
+                            }
+                        });
+                        footer.querySelector('.fa-wifi').classList.replace('text-red-400', 'text-green-400');
+                        footer.querySelector('.fa-wifi').nextElementSibling.textContent = 'Connected';
+                    }
+                });
+            }
+
+            // Suggestion interactions
+            const suggestionBtns = document.querySelectorAll('[class*="suggestion"] button');
+            suggestionBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.textContent.trim();
+                    const suggestionCard = e.target.closest('.glass-dark');
+                    
+                    if (action.includes('Accept')) {
+                        suggestionCard.style.opacity = '0.5';
+                        suggestionCard.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            suggestionCard.style.display = 'none';
+                        }, 300);
+                    } else if (action.includes('Reject')) {
+                        suggestionCard.style.opacity = '0.3';
+                    }
+                });
+            });
+
+            // PR actions
+            const prBtns = document.querySelectorAll('[class*="PRs"] button');
+            prBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.textContent.trim();
+                    
+                    if (action.includes('Push')) {
+                        // Simulate push action
+                        e.target.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Pushing...';
+                        e.target.disabled = true;
+                        
+                        setTimeout(() => {
+                            e.target.innerHTML = '<i class="fas fa-check mr-1"></i>Pushed';
+                            e.target.classList.replace('bg-green-500', 'bg-gray-500');
+                        }, 2000);
+                    } else if (action.includes('Edit')) {
+                        // Simulate edit mode
+                        const description = e.target.closest('.glass-dark').querySelector('p');
+                        const originalText = description.textContent;
+                        
+                        description.innerHTML = `<textarea class="w-full bg-transparent border border-white border-opacity-20 rounded p-2 text-sm resize-none" rows="3">${originalText}</textarea>`;
+                        
+                        e.target.textContent = 'Save';
+                        e.target.classList.replace('bg-white', 'bg-blue-500');
+                        
+                        // Revert after 3 seconds for demo
+                        setTimeout(() => {
+                            description.textContent = originalText;
+                            e.target.innerHTML = '<i class="fas fa-edit mr-1"></i>Edit';
+                            e.target.classList.replace('bg-blue-500', 'bg-white');
+                        }, 3000);
+                    }
+                });
+            });
+
+            // Voice recording simulation
+            const voiceBtn = document.querySelector('.bg-purple-500:not(.bg-purple-600)');
+            if (voiceBtn) {
+                voiceBtn.addEventListener('click', () => {
+                    voiceBtn.innerHTML = '<i class="fas fa-stop mr-2"></i>Stop Recording';
+                    voiceBtn.classList.add('animate-pulse');
+                    
+                    setTimeout(() => {
+                        voiceBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Recording';
+                        voiceBtn.classList.remove('animate-pulse');
+                    }, 3000);
+                });
+            }
+
+            // Changelog accordion
+            const changelogHeaders = document.querySelectorAll('[class*="Changelogs"] .cursor-pointer');
+            changelogHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const chevron = header.querySelector('.fa-chevron-down, .fa-chevron-right');
+                    const content = header.nextElementSibling;
+                    
+                    if (chevron.classList.contains('fa-chevron-right')) {
+                        chevron.classList.replace('fa-chevron-right', 'fa-chevron-down');
+                        if (content) content.style.display = 'block';
+                    } else {
+                        chevron.classList.replace('fa-chevron-down', 'fa-chevron-right');
+                        if (content) content.style.display = 'none';
+                    }
+                });
+            });
+
+            // Add fade-in animations to sections
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-fade-in');
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe all cards for animation
+            document.querySelectorAll('.glass').forEach(card => {
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

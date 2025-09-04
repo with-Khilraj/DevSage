@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Sign Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .animate-slide-left {
+            animation: slideLeft 0.5s ease-out;
+        }
+
+        .animate-slide-right {
+            animation: slideRight 0.5s ease-out;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideRight {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Form styles */
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-oauth {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-oauth:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        /* Step indicators */
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .step-indicator.active {
+            background: #4facfe;
+            border-color: #4facfe;
+            color: white;
+        }
+
+        .step-indicator.completed {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        /* Password strength indicator */
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { background: #ef4444; }
+        .strength-fair { background: #f59e0b; }
+        .strength-good { background: #10b981; }
+        .strength-strong { background: #059669; }
+
+        /* Checkbox styles */
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox:checked {
+            background: #4facfe;
+            border-color: #4facfe;
+        }
+
+        .custom-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error and success states */
+        .form-error {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .form-success {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        .error-message {
+            color: #fca5a5;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Step content visibility */
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        /* Floating elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .floating-code {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+        }
+
+        /* Team invitation styles */
+        .invitation-banner {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .signup-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+            
+            .step-indicators {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="gradient-bg flex items-center justify-center p-4">
+    <!-- Floating Code Elements -->
+    <div class="floating-element top-10 left-10 animate-float floating-code">
+        const newUser = await signup();
+    </div>
+    <div class="floating-element top-20 right-20 animate-float floating-code" style="animation-delay: -2s;">
+        user.joinTeam(invitation.teamId);
+    </div>
+    <div class="floating-element bottom-20 left-20 animate-float floating-code" style="animation-delay: -4s;">
+        import { DevSage } from 'ai-tools';
+    </div>
+    <div class="floating-element bottom-10 right-10 animate-float floating-code" style="animation-delay: -1s;">
+        // Start your AI journey
+    </div>
+
+    <!-- Main Signup Container -->
+    <div class="signup-container glass rounded-3xl p-8 w-full max-w-lg animate-slide-up">
+        <!-- Team Invitation Banner (shown when invited) -->
+        <div id="invitationBanner" class="invitation-banner rounded-2xl p-4 mb-6 hidden">
+            <div class="flex items-center gap-3">
+                <div class="bg-white bg-opacity-20 p-2 rounded-full">
+                    <i class="fas fa-users text-white"></i>
+                </div>
+                <div>
+                    <h3 class="font-medium text-white">You're invited to join</h3>
+                    <p id="teamName" class="text-white text-opacity-80 text-sm">TechCorp Development Team</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logo and Header -->
+        <div class="text-center mb-8 animate-fade-in">
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-2xl inline-block mb-4">
+                <i class="fas fa-brain text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">Join DevSage</h1>
+            <p class="text-white text-opacity-70">Create your account and start building smarter</p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div class="step-indicator active" id="step1-indicator">
+                    <span class="text-sm font-bold">1</span>
+                </div>
+                <div class="flex-1 progress-bar mx-3">
+                    <div class="progress-fill" id="progressFill" style="width: 33%"></div>
+                </div>
+                <div class="step-indicator" id="step2-indicator">
+                    <span class="text-sm font-bold">2</span>
+                </div>
+                <div class="flex-1 progress-bar mx-3">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="step-indicator" id="step3-indicator">
+                    <span class="text-sm font-bold">3</span>
+                </div>
+            </div>
+            <div class="flex justify-between text-xs text-white text-opacity-60">
+                <span>Account</span>
+                <span>Profile</span>
+                <span>Verify</span>
+            </div>
+        </div>
+
+        <!-- Multi-step Form -->
+        <form id="signupForm">
+            <!-- Step 1: Account Information -->
+            <div id="step1" class="step-content active">
+                <div class="space-y-6">
+                    <!-- Name Fields -->
+                    <div class="grid grid-cols-2 gap-4 animate-fade-in" style="animation-delay: 0.1s;">
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-white mb-2">
+                                First Name
+                            </label>
+                            <input
+                                type="text"
+                                id="firstName"
+                                name="firstName"
+                                placeholder="John"
+                                class="form-input w-full px-4 py-3 rounded-xl"
+                                required
+                            >
+                            <div id="firstName-error" class="error-message hidden"></div>
+                        </div>
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-white mb-2">
+                                Last Name
+                            </label>
+                            <input
+                                type="text"
+                                id="lastName"
+                                name="lastName"
+                                placeholder="Doe"
+                                class="form-input w-full px-4 py-3 rounded-xl"
+                                required
+                            >
+                            <div id="lastName-error" class="error-message hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="animate-fade-in" style="animation-delay: 0.2s;">
+                        <label for="email" class="block text-sm font-medium text-white mb-2">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="john.doe@company.com"
+                                class="form-input w-full px-4 py-3 pl-12 rounded-xl"
+                                required
+                            >
+                            <i class="fas fa-envelope absolute left-4 top-4 text-white text-opacity-60"></i>
+                        </div>
+                        <div id="email-error" class="error-message hidden"></div>
+                    </div>
+
+                    <!-- Password Fields -->
+                    <div class="animate-fade-in" style="animation-delay: 0.3s;">
+                        <label for="password" class="block text-sm font-medium text-white mb-2">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Create a strong password"
+                                class="form-input w-full px-4 py-3 pl-12 pr-12 rounded-xl"
+                                required
+                            >
+                            <i class="fas fa-lock absolute left-4 top-4 text-white text-opacity-60"></i>
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="absolute right-4 top-4 text-white text-opacity-60 hover:text-white transition-colors"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength"></div>
+                        <div id="password-error" class="error-message hidden"></div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="animate-fade-in" style="animation-delay: 0.4s;">
+                        <label for="confirmPassword" class="block text-sm font-medium text-white mb-2">
+                            Confirm Password
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                placeholder="Confirm your password"
+                                class="form-input w-full px-4 py-3 pl-12 rounded-xl"
+                                required
+                            >
+                            <i class="fas fa-lock absolute left-4 top-4 text-white text-opacity-60"></i>
+                        </div>
+                        <div id="confirmPassword-error" class="error-message hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Profile Information -->
+            <div id="step2" class="step-content">
+                <div class="space-y-6">
+                    <!-- Username -->
+                    <div class="animate-slide-left">
+                        <label for="username" class="block text-sm font-medium text-white mb-2">
+                            Username
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                placeholder="johndoe"
+                                class="form-input w-full px-4 py-3 pl-12 rounded-xl"
+                                required
+                            >
+                            <i class="fas fa-user absolute left-4 top-4 text-white text-opacity-60"></i>
+                        </div>
+                        <p class="text-xs text-white text-opacity-60 mt-1">This will be your unique identifier</p>
+                        <div id="username-error" class="error-message hidden"></div>
+                    </div>
+
+                    <!-- Job Title -->
+                    <div class="animate-slide-left" style="animation-delay: 0.1s;">
+                        <label for="jobTitle" class="block text-sm font-medium text-white mb-2">
+                            Job Title
+                        </label>
+                        <input
+                            type="text"
+                            id="jobTitle"
+                            name="jobTitle"
+                            placeholder="Senior Developer"
+                            class="form-input w-full px-4 py-3 rounded-xl"
+                        >
+                    </div>
+
+                    <!-- Company -->
+                    <div class="animate-slide-left" style="animation-delay: 0.2s;">
+                        <label for="company" class="block text-sm font-medium text-white mb-2">
+                            Company (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            id="company"
+                            name="company"
+                            placeholder="Your Company"
+                            class="form-input w-full px-4 py-3 rounded-xl"
+                        >
+                    </div>
+
+                    <!-- Experience Level -->
+                    <div class="animate-slide-left" style="animation-delay: 0.3s;">
+                        <label for="experience" class="block text-sm font-medium text-white mb-2">
+                            Experience Level
+                        </label>
+                        <select id="experience" name="experience" class="form-input w-full px-4 py-3 rounded-xl">
+                            <option value="">Select your experience level</option>
+                            <option value="junior">Junior (0-2 years)</option>
+                            <option value="mid">Mid-level (2-5 years)</option>
+                            <option value="senior">Senior (5-10 years)</option>
+                            <option value="lead">Lead/Principal (10+ years)</option>
+                        </select>
+                    </div>
+
+                    <!-- Primary Technologies -->
+                    <div class="animate-slide-left" style="animation-delay: 0.4s;">
+                        <label class="block text-sm font-medium text-white mb-2">
+                            Primary Technologies
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-center gap-3 p-3 glass-dark rounded-lg cursor-pointer hover:bg-opacity-30">
+                                <input type="checkbox" name="technologies" value="javascript" class="custom-checkbox">
+                                <span class="text-sm">JavaScript</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 glass-dark rounded-lg cursor-pointer hover:bg-opacity-30">
+                                <input type="checkbox" name="technologies" value="python" class="custom-checkbox">
+                                <span class="text-sm">Python</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 glass-dark rounded-lg cursor-pointer hover:bg-opacity-30">
+                                <input type="checkbox" name="technologies" value="java" class="custom-checkbox">
+                                <span class="text-sm">Java</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 glass-dark rounded-lg cursor-pointer hover:bg-opacity-30">
+                                <input type="checkbox" name="technologies" value="csharp" class="custom-checkbox">
+                                <span class="text-sm">C#</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 glass-dark rounded-lg cursor-pointer hover:bg-opacity-30">
+                                <input type="checkbox" name="technologies" value="react" class="custom-checkbox">
+                                <span class="text-sm">React</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 glass-dark rounded-lg cursor-pointer hover:bg-opacity-30">
+                                <input type="checkbox" name="technologies" value="nodejs" class="custom-checkbox">
+                                <span class="text-sm">Node.js</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Terms and Verification -->
+            <div id="step3" class="step-content">
+                <div class="space-y-6">
+                    <!-- Terms and Privacy -->
+                    <div class="animate-slide-right">
+                        <div class="glass-dark rounded-xl p-6">
+                            <h3 class="font-medium text-white mb-4">Terms & Privacy</h3>
+                            <div class="space-y-4">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" id="agreeTerms" class="custom-checkbox mt-1" required>
+                                    <span class="text-sm text-white text-opacity-80">
+                                        I agree to the <a href="#" class="text-blue-400 hover:text-blue-300">Terms of Service</a> 
+                                        and <a href="#" class="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" id="agreeMarketing" class="custom-checkbox mt-1">
+                                    <span class="text-sm text-white text-opacity-80">
+                                        I'd like to receive product updates and developer tips via email
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OAuth Options -->
+                    <div class="animate-slide-right" style="animation-delay: 0.1s;">
+                        <div class="text-center mb-4">
+                            <p class="text-white text-opacity-70 text-sm">Or sign up with</p>
+                        </div>
+                        <div class="space-y-3">
+                            <button
+                                type="button"
+                                onclick="signupWithOAuth('github')"
+                                class="btn-oauth w-full py-3 px-4 rounded-xl text-white font-medium flex items-center justify-center gap-3"
+                            >
+                                <i class="fab fa-github text-xl"></i>
+                                <span>Continue with GitHub</span>
+                            </button>
+                            <button
+                                type="button"
+                                onclick="signupWithOAuth('gitlab')"
+                                class="btn-oauth w-full py-3 px-4 rounded-xl text-white font-medium flex items-center justify-center gap-3"
+                            >
+                                <i class="fab fa-gitlab text-xl text-orange-400"></i>
+                                <span>Continue with GitLab</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex items-center justify-between mt-8">
+                <button
+                    type="button"
+                    id="prevButton"
+                    class="btn-secondary px-6 py-3 rounded-xl text-white font-medium hidden"
+                    onclick="previousStep()"
+                >
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                
+                <div class="flex-1"></div>
+                
+                <button
+                    type="button"
+                    id="nextButton"
+                    class="btn-primary px-6 py-3 rounded-xl text-white font-medium"
+                    onclick="nextStep()"
+                >
+                    <span id="nextButtonText">Continue</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                
+                <button
+                    type="submit"
+                    id="submitButton"
+                    class="btn-primary px-6 py-3 rounded-xl text-white font-medium hidden"
+                >
+                    <span id="submitButtonText">Create Account</span>
+                    <i id="submitSpinner" class="fas fa-spinner spinner ml-2 hidden"></i>
+                </button>
+            </div>
+
+            <!-- Error Message -->
+            <div id="signupError" class="hidden mt-4 p-4 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle text-red-400"></i>
+                    <span id="signupErrorText" class="text-red-200 text-sm"></span>
+                </div>
+            </div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="text-center mt-8 animate-fade-in" style="animation-delay: 0.8s;">
+            <p class="text-white text-opacity-70">
+                Already have an account?
+                <a href="#" id="loginLink" class="text-blue-400 hover:text-blue-300 transition-colors font-medium ml-1">
+                    Sign in
+                </a>
+            </p>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="text-center mt-6 animate-fade-in" style="animation-delay: 0.9s;">
+            <p class="text-white text-opacity-50 text-sm">
+                <i class="fas fa-shield-alt mr-2"></i>
+                Trusted by 10,000+ developers worldwide
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Form elements
+        const signupForm = document.getElementById('signupForm');
+        const nextButton = document.getElementById('nextButton');
+        const prevButton = document.getElementById('prevButton');
+        const submitButton = document.getElementById('submitButton');
+        const signupError = document.getElementById('signupError');
+        const signupErrorText = document.getElementById('signupErrorText');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for team invitation in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteToken = urlParams.get('invite');
+            if (inviteToken) {
+                showTeamInvitation();
+            }
+
+            // Initialize password strength checker
+            document.getElementById('password').addEventListener('input', checkPasswordStrength);
+            
+            // Initialize password visibility toggle
+            document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
+            
+            // Initialize real-time validation
+            initializeValidation();
+        });
+
+        // Team invitation handling
+        function showTeamInvitation() {
+            const banner = document.getElementById('invitationBanner');
+            banner.classList.remove('hidden');
+            
+            // Simulate fetching team info
+            setTimeout(() => {
+                document.getElementById('teamName').textContent = 'TechCorp Development Team';
+            }, 500);
+        }
+
+        // Step navigation
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateStepDisplay();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepDisplay();
+            }
+        }
+
+        function updateStepDisplay() {
+            // Hide all steps
+            document.querySelectorAll('.step-content').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show current step
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Update step indicators
+            for (let i = 1; i <= totalSteps; i++) {
+                const indicator = document.getElementById(`step${i}-indicator`);
+                if (i < currentStep) {
+                    indicator.className = 'step-indicator completed';
+                    indicator.innerHTML = '<i class="fas fa-check"></i>';
+                } else if (i === currentStep) {
+                    indicator.className = 'step-indicator active';
+                    indicator.innerHTML = `<span class="text-sm font-bold">${i}</span>`;
+                } else {
+                    indicator.className = 'step-indicator';
+                    indicator.innerHTML = `<span class="text-sm font-bold">${i}</span>`;
+                }
+            }
+            
+            // Update progress bar
+            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            // Update navigation buttons
+            prevButton.classList.toggle('hidden', currentStep === 1);
+            nextButton.classList.toggle('hidden', currentStep === totalSteps);
+            submitButton.classList.toggle('hidden', currentStep !== totalSteps);
+            
+            // Update button text
+            if (currentStep === totalSteps) {
+                document.getElementById('nextButtonText').textContent = 'Create Account';
+            } else {
+                document.getElementById('nextButtonText').textContent = 'Continue';
+            }
+        }
+
+        // Validation functions
+        function validateCurrentStep() {
+            let isValid = true;
+            
+            if (currentStep === 1) {
+                isValid = validateStep1();
+            } else if (currentStep === 2) {
+                isValid = validateStep2();
+            } else if (currentStep === 3) {
+                isValid = validateStep3();
+            }
+            
+            return isValid;
+        }
+
+        function validateStep1() {
+            let isValid = true;
+            
+            // Validate first name
+            const firstName = document.getElementById('firstName').value.trim();
+            if (!firstName) {
+                showFieldError('firstName', 'First name is required');
+                isValid = false;
+            } else {
+                clearFieldError('firstName');
+            }
+            
+            // Validate last name
+            const lastName = document.getElementById('lastName').value.trim();
+            if (!lastName) {
+                showFieldError('lastName', 'Last name is required');
+                isValid = false;
+            } else {
+                clearFieldError('lastName');
+            }
+            
+            // Validate email
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                showFieldError('email', 'Email is required');
+                isValid = false;
+            } else if (!isValidEmail(email)) {
+                showFieldError('email', 'Please enter a valid email address');
+                isValid = false;
+            } else {
+                clearFieldError('email');
+            }
+            
+            // Validate password
+            const password = document.getElementById('password').value;
+            if (!password) {
+                showFieldError('password', 'Password is required');
+                isValid = false;
+            } else if (password.length < 8) {
+                showFieldError('password', 'Password must be at least 8 characters');
+                isValid = false;
+            } else {
+                clearFieldError('password');
+            }
+            
+            // Validate confirm password
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (!confirmPassword) {
+                showFieldError('confirmPassword', 'Please confirm your password');
+                isValid = false;
+            } else if (password !== confirmPassword) {
+                showFieldError('confirmPassword', 'Passwords do not match');
+                isValid = false;
+            } else {
+                clearFieldError('confirmPassword');
+            }
+            
+            return isValid;
+        }
+
+        function validateStep2() {
+            let isValid = true;
+            
+            // Validate username
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showFieldError('username', 'Username is required');
+                isValid = false;
+            } else if (username.length < 3) {
+                showFieldError('username', 'Username must be at least 3 characters');
+                isValid = false;
+            } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showFieldError('username', 'Username can only contain letters, numbers, and underscores');
+                isValid = false;
+            } else {
+                clearFieldError('username');
+            }
+            
+            return isValid;
+        }
+
+        function validateStep3() {
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            if (!agreeTerms) {
+                showSignupError('You must agree to the Terms of Service and Privacy Policy');
+                return false;
+            }
+            
+            hideSignupError();
+            return true;
+        }
+
+        // Helper functions
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + '-error');
+            
+            field.classList.add('form-error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + '-error');
+            
+            field.classList.remove('form-error');
+            field.classList.add('form-success');
+            errorDiv.classList.add('hidden');
+        }
+
+        function showSignupError(message) {
+            signupErrorText.textContent = message;
+            signupError.classList.remove('hidden');
+        }
+
+        function hideSignupError() {
+            signupError.classList.add('hidden');
+        }
+
+        // Password strength checker
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthBar = document.getElementById('passwordStrength');
+            
+            let strength = 0;
+            let strengthClass = '';
+            
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            switch (strength) {
+                case 0:
+                case 1:
+                    strengthClass = 'strength-weak';
+                    break;
+                case 2:
+                case 3:
+                    strengthClass = 'strength-fair';
+                    break;
+                case 4:
+                    strengthClass = 'strength-good';
+                    break;
+                case 5:
+                    strengthClass = 'strength-strong';
+                    break;
+            }
+            
+            strengthBar.className = `password-strength ${strengthClass}`;
+            strengthBar.style.width = `${(strength / 5) * 100}%`;
+        }
+
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('togglePassword');
+            const icon = toggleButton.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        // Real-time validation
+        function initializeValidation() {
+            const inputs = ['firstName', 'lastName', 'email', 'password', 'confirmPassword', 'username'];
+            
+            inputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('blur', () => {
+                        if (currentStep === 1 && ['firstName', 'lastName', 'email', 'password', 'confirmPassword'].includes(inputId)) {
+                            validateStep1();
+                        } else if (currentStep === 2 && inputId === 'username') {
+                            validateStep2();
+                        }
+                    });
+                }
+            });
+        }
+
+        // Form submission
+        signupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateCurrentStep()) return;
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submitButton');
+            const submitText = document.getElementById('submitButtonText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            submitBtn.disabled = true;
+            submitText.textContent = 'Creating Account...';
+            submitSpinner.classList.remove('hidden');
+            
+            try {
+                // Simulate API call
+                await simulateSignup();
+                
+                // Success
+                submitText.textContent = 'Account Created!';
+                submitSpinner.classList.add('hidden');
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('bg-green-500');
+                
+                setTimeout(() => {
+                    window.location.href = '/verify-email';
+                }, 1500);
+                
+            } catch (error) {
+                showSignupError(error.message);
+                
+                // Reset button
+                submitBtn.disabled = false;
+                submitText.textContent = 'Create Account';
+                submitSpinner.classList.add('hidden');
+            }
+        });
+
+        // Simulate signup API call
+        async function simulateSignup() {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const email = document.getElementById('email').value;
+                    
+                    if (email === 'taken@example.com') {
+                        reject(new Error('This email is already registered. Please use a different email or sign in.'));
+                    } else {
+                        resolve({ success: true });
+                    }
+                }, 2000);
+            });
+        }
+
+        // OAuth signup
+        async function signupWithOAuth(provider) {
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            
+            button.disabled = true;
+            button.innerHTML = `<i class="fas fa-spinner spinner mr-3"></i>Connecting to ${provider}...`;
+            
+            try {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Open OAuth popup
+                const popup = window.open(
+                    `https://oauth.${provider}.com/authorize?client_id=devsage&redirect_uri=${encodeURIComponent(window.location.origin)}/auth/callback`,
+                    'oauth',
+                    'width=600,height=600,scrollbars=yes,resizable=yes'
+                );
+                
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        window.location.href = '/dashboard';
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                showSignupError(`Failed to connect with ${provider}. Please try again.`);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+
+        // Link handlers
+        document.getElementById('loginLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/login';
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'INPUT' && activeElement.form === signupForm) {
+                    e.preventDefault();
+                    if (currentStep < totalSteps) {
+                        nextStep();
+                    } else {
+                        signupForm.dispatchEvent(new Event('submit'));
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

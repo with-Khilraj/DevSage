@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Connecting Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .animate-bounce-in {
+            animation: bounceIn 0.8s ease-out;
+        }
+
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success state */
+        .success-state {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Error state */
+        .error-state {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Provider icons */
+        .provider-github { color: #333; }
+        .provider-gitlab { color: #fc6d26; }
+        .provider-bitbucket { color: #0052cc; }
+
+        /* Progress dots */
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: progressDot 1.5s ease-in-out infinite;
+        }
+
+        .progress-dot:nth-child(1) { animation-delay: 0s; }
+        .progress-dot:nth-child(2) { animation-delay: 0.2s; }
+        .progress-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes progressDot {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        /* Floating elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .floating-code {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .callback-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="gradient-bg flex items-center justify-center p-4">
+    <!-- Floating Code Elements -->
+    <div class="floating-element top-10 left-10 animate-pulse-slow floating-code">
+        const authCode = getUrlParam('code');
+    </div>
+    <div class="floating-element top-20 right-20 animate-pulse-slow floating-code" style="animation-delay: -1s;">
+        await exchangeCodeForToken(authCode);
+    </div>
+    <div class="floating-element bottom-20 left-20 animate-pulse-slow floating-code" style="animation-delay: -2s;">
+        user.provider = 'github';
+    </div>
+    <div class="floating-element bottom-10 right-10 animate-pulse-slow floating-code" style="animation-delay: -0.5s;">
+        // OAuth flow complete
+    </div>
+
+    <!-- Main Container -->
+    <div class="callback-container glass rounded-3xl p-8 w-full max-w-md animate-slide-up">
+        <!-- Processing State -->
+        <div id="processingState" class="text-center">
+            <div class="mb-8 animate-fade-in">
+                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-2xl inline-block mb-4">
+                    <i id="providerIcon" class="fab fa-github text-white text-4xl animate-pulse-slow"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Connecting Account</h1>
+                <p class="text-white text-opacity-70">
+                    Securely connecting your <span id="providerName">GitHub</span> account...
+                </p>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="progress-dots"></div>
+
+            <!-- Processing Steps -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.2s;">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3" id="step1">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-spinner spinner text-white text-xs"></i>
+                        </div>
+                        <span class="text-white text-sm">Verifying authorization code</span>
+                    </div>
+                    <div class="flex items-center gap-3" id="step2">
+                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs">2</span>
+                        </div>
+                        <span class="text-white text-opacity-50 text-sm">Exchanging for access token</span>
+                    </div>
+                    <div class="flex items-center gap-3" id="step3">
+                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs">3</span>
+                        </div>
+                        <span class="text-white text-opacity-50 text-sm">Fetching user profile</span>
+                    </div>
+                    <div class="flex items-center gap-3" id="step4">
+                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs">4</span>
+                        </div>
+                        <span class="text-white text-opacity-50 text-sm">Creating DevSage account</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="text-center animate-fade-in" style="animation-delay: 0.4s;">
+                <p class="text-white text-opacity-60 text-sm">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    Your data is encrypted and secure
+                </p>
+            </div>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState" class="text-center hidden">
+            <div class="mb-8 animate-bounce-in">
+                <div class="success-state p-6 rounded-2xl inline-block mb-4">
+                    <i class="fas fa-check-circle text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Account Connected!</h1>
+                <p class="text-white text-opacity-70">
+                    Successfully connected your <span id="successProviderName">GitHub</span> account
+                </p>
+            </div>
+
+            <!-- User Info -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+                <div class="flex items-center gap-4">
+                    <img id="userAvatar" src="https://github.com/octocat.png" alt="User Avatar" 
+                         class="w-16 h-16 rounded-full border-2 border-white border-opacity-30">
+                    <div class="text-left">
+                        <h3 id="userName" class="text-white font-bold text-lg">The Octocat</h3>
+                        <p id="userEmail" class="text-white text-opacity-70 text-sm">octocat@github.com</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <i id="successProviderIcon" class="fab fa-github text-white"></i>
+                            <span id="userHandle" class="text-blue-400 text-sm">@octocat</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repository Access -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.2s;">
+                <h3 class="text-white font-medium mb-4">Repository Access Granted</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-opacity-70">Public repositories</span>
+                        <span class="text-green-400 font-medium" id="publicRepos">42</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-opacity-70">Private repositories</span>
+                        <span class="text-blue-400 font-medium" id="privateRepos">12</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-opacity-70">Organizations</span>
+                        <span class="text-purple-400 font-medium" id="organizations">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue Button -->
+            <button
+                id="continueButton"
+                class="btn-primary w-full py-3 rounded-xl text-white font-medium animate-fade-in"
+                style="animation-delay: 0.3s;"
+            >
+                <i class="fas fa-arrow-right mr-2"></i>
+                Continue to DevSage
+            </button>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="text-center hidden">
+            <div class="mb-8 animate-shake">
+                <div class="error-state p-6 rounded-2xl inline-block mb-4">
+                    <i class="fas fa-times-circle text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Connection Failed</h1>
+                <p class="text-white text-opacity-70">
+                    Unable to connect your <span id="errorProviderName">GitHub</span> account
+                </p>
+            </div>
+
+            <!-- Error Details -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+                <h3 class="font-medium text-white mb-4">What happened?</h3>
+                <div class="text-left space-y-3 text-sm text-white text-opacity-80">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-red-400 mt-0.5"></i>
+                        <span id="errorMessage">The authorization was cancelled or expired</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-400 mt-0.5"></i>
+                        <span>Your account information was not accessed</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-shield-alt text-green-400 mt-0.5"></i>
+                        <span>No data was stored or compromised</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retry Options -->
+            <div class="space-y-3 animate-fade-in" style="animation-delay: 0.2s;">
+                <button
+                    id="retryButton"
+                    class="btn-primary w-full py-3 rounded-xl text-white font-medium"
+                >
+                    <i class="fas fa-redo mr-2"></i>
+                    Try Again
+                </button>
+                <button
+                    id="useEmailButton"
+                    class="btn-secondary w-full py-3 rounded-xl text-white font-medium"
+                >
+                    <i class="fas fa-envelope mr-2"></i>
+                    Sign Up with Email Instead
+                </button>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 text-center animate-fade-in" style="animation-delay: 0.5s;">
+            <p class="text-white text-opacity-50 text-sm">
+                <i class="fas fa-question-circle mr-2"></i>
+                Need help? <a href="#" class="text-blue-400 hover:text-blue-300">Contact Support</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const authCode = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const provider = urlParams.get('provider') || 'github'; // Default to GitHub
+
+        // State elements
+        const processingState = document.getElementById('processingState');
+        const successState = document.getElementById('successState');
+        const errorState = document.getElementById('errorState');
+
+        // Provider configuration
+        const providers = {
+            github: {
+                name: 'GitHub',
+                icon: 'fab fa-github',
+                color: '#333'
+            },
+            gitlab: {
+                name: 'GitLab',
+                icon: 'fab fa-gitlab',
+                color: '#fc6d26'
+            },
+            bitbucket: {
+                name: 'Bitbucket',
+                icon: 'fab fa-bitbucket',
+                color: '#0052cc'
+            }
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupProvider();
+            
+            if (error) {
+                handleOAuthError(error);
+            } else if (authCode) {
+                processOAuthCallback(authCode, state);
+            } else {
+                handleOAuthError('missing_code');
+            }
+        });
+
+        // Setup provider-specific UI
+        function setupProvider() {
+            const providerConfig = providers[provider] || providers.github;
+            
+            // Update provider names
+            document.querySelectorAll('[id$="ProviderName"]').forEach(el => {
+                el.textContent = providerConfig.name;
+            });
+            
+            // Update provider icons
+            document.querySelectorAll('[id$="ProviderIcon"], #providerIcon').forEach(el => {
+                el.className = `${providerConfig.icon} text-white text-4xl animate-pulse-slow`;
+            });
+        }
+
+        // Process OAuth callback
+        async function processOAuthCallback(code, state) {
+            try {
+                // Step 1: Verify authorization code
+                await simulateStep(1, 'Verifying authorization code', 1000);
+                
+                // Step 2: Exchange for access token
+                await simulateStep(2, 'Exchanging for access token', 1500);
+                
+                // Step 3: Fetch user profile
+                await simulateStep(3, 'Fetching user profile', 1200);
+                
+                // Step 4: Create/update DevSage account
+                await simulateStep(4, 'Creating DevSage account', 1800);
+                
+                // Show success state
+                showSuccessState();
+                
+            } catch (error) {
+                handleOAuthError(error.type || 'unknown_error');
+            }
+        }
+
+        // Simulate processing step
+        async function simulateStep(stepNumber, message, delay) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const step = document.getElementById(`step${stepNumber}`);
+                    const prevStep = stepNumber > 1 ? document.getElementById(`step${stepNumber - 1}`) : null;
+                    
+                    // Complete previous step
+                    if (prevStep) {
+                        const prevIcon = prevStep.querySelector('div');
+                        const prevText = prevStep.querySelector('span');
+                        prevIcon.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
+                        prevIcon.className = 'w-6 h-6 bg-green-500 rounded-full flex items-center justify-center';
+                        prevText.className = 'text-white text-sm';
+                    }
+                    
+                    // Start current step
+                    const currentIcon = step.querySelector('div');
+                    const currentText = step.querySelector('span');
+                    currentIcon.innerHTML = '<i class="fas fa-spinner spinner text-white text-xs"></i>';
+                    currentIcon.className = 'w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center';
+                    currentText.className = 'text-white text-sm';
+                    currentText.textContent = message;
+                    
+                    // Simulate random failures for demo
+                    if (Math.random() < 0.1 && stepNumber === 3) { // 10% chance of failure at step 3
+                        reject({ type: 'profile_fetch_failed' });
+                    } else {
+                        resolve();
+                    }
+                }, delay);
+            });
+        }
+
+        // Show success state
+        function showSuccessState() {
+            // Complete final step
+            const finalStep = document.getElementById('step4');
+            const finalIcon = finalStep.querySelector('div');
+            const finalText = finalStep.querySelector('span');
+            finalIcon.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
+            finalIcon.className = 'w-6 h-6 bg-green-500 rounded-full flex items-center justify-center';
+            finalText.className = 'text-white text-sm';
+            
+            setTimeout(() => {
+                processingState.classList.add('hidden');
+                successState.classList.remove('hidden');
+                
+                // Populate user data (simulated)
+                populateUserData();
+            }, 1000);
+        }
+
+        // Populate user data
+        function populateUserData() {
+            const userData = {
+                github: {
+                    name: 'The Octocat',
+                    email: 'octocat@github.com',
+                    handle: '@octocat',
+                    avatar: 'https://github.com/octocat.png',
+                    publicRepos: 42,
+                    privateRepos: 12,
+                    organizations: 3
+                },
+                gitlab: {
+                    name: 'GitLab User',
+                    email: 'user@gitlab.com',
+                    handle: '@gitlabuser',
+                    avatar: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon',
+                    publicRepos: 28,
+                    privateRepos: 8,
+                    organizations: 2
+                },
+                bitbucket: {
+                    name: 'Bitbucket User',
+                    email: 'user@bitbucket.org',
+                    handle: '@bitbucketuser',
+                    avatar: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon',
+                    publicRepos: 15,
+                    privateRepos: 5,
+                    organizations: 1
+                }
+            };
+            
+            const data = userData[provider] || userData.github;
+            
+            document.getElementById('userName').textContent = data.name;
+            document.getElementById('userEmail').textContent = data.email;
+            document.getElementById('userHandle').textContent = data.handle;
+            document.getElementById('userAvatar').src = data.avatar;
+            document.getElementById('publicRepos').textContent = data.publicRepos;
+            document.getElementById('privateRepos').textContent = data.privateRepos;
+            document.getElementById('organizations').textContent = data.organizations;
+        }
+
+        // Handle OAuth errors
+        function handleOAuthError(errorType) {
+            processingState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            
+            const errorMessages = {
+                'access_denied': 'You cancelled the authorization process',
+                'invalid_request': 'The authorization request was invalid',
+                'unauthorized_client': 'DevSage is not authorized for this provider',
+                'unsupported_response_type': 'The provider doesn\'t support this flow',
+                'invalid_scope': 'Requested permissions are not available',
+                'server_error': 'The provider encountered an error',
+                'temporarily_unavailable': 'The provider is temporarily unavailable',
+                'missing_code': 'No authorization code was provided',
+                'profile_fetch_failed': 'Unable to fetch your profile information',
+                'unknown_error': 'An unexpected error occurred'
+            };
+            
+            const message = errorMessages[errorType] || errorMessages.unknown_error;
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Button handlers
+        document.getElementById('continueButton').addEventListener('click', function() {
+            // Check if this was a team invitation flow
+            if (state && state.startsWith('invite_')) {
+                window.location.href = '/team-dashboard';
+            } else {
+                window.location.href = '/dashboard';
+            }
+        });
+
+        document.getElementById('retryButton').addEventListener('click', function() {
+            // Retry OAuth flow
+            const providerConfig = providers[provider] || providers.github;
+            window.location.href = `https://oauth.${provider}.com/authorize?client_id=devsage&redirect_uri=${encodeURIComponent(window.location.origin)}/auth/callback&scope=user:email,repo`;
+        });
+
+        document.getElementById('useEmailButton').addEventListener('click', function() {
+            window.location.href = '/signup';
+        });
+
+        // Auto-redirect on success (optional)
+        if (successState && !successState.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.getElementById('continueButton').click();
+            }, 5000); // Auto-redirect after 5 seconds
+        }
+
+        // Demo scenarios
+        console.log('Demo scenarios:');
+        console.log('- Add "?code=valid123&provider=github" for successful GitHub flow');
+        console.log('- Add "?error=access_denied&provider=gitlab" for cancelled GitLab flow');
+        console.log('- Add "?code=valid123&state=invite_abc123" for team invitation flow');
+    </script>
+</body>
+
+</html>

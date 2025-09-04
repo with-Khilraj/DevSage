@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Code Suggestions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        /* Mobile responsive utilities */
+        .mobile-hide { display: block; }
+        @media (max-width: 768px) {
+            .mobile-hide { display: none; }
+            .mobile-show { display: block !important; }
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online { background: #10b981; }
+        .status-sync { background: #f59e0b; animation: pulse 2s infinite; }
+        .status-offline { background: #ef4444; }
+        
+        /* Suggestion severity colors */
+        .severity-critical { border-left-color: #ef4444; }
+        .severity-high { border-left-color: #f97316; }
+        .severity-medium { border-left-color: #eab308; }
+        .severity-low { border-left-color: #22c55e; }
+        
+        /* Code block styles */
+        .code-block {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .code-diff-before {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+        }
+        
+        .code-diff-after {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+        }
+        
+        /* Filter animations */
+        .filter-active {
+            background: rgba(79, 172, 254, 0.2);
+            border-color: #4facfe;
+            color: #4facfe;
+        }
+        
+        /* Suggestion animations */
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+        
+        .animate-slide-out {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        
+        /* Progress ring for stats */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease-in-out;
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+        
+        /* Expandable content */
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .expandable-content.expanded {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header (Fixed Top Bar) -->
+    <header class="fixed top-0 w-full h-16 glass-dark z-50">
+        <div class="flex items-center justify-between px-6 h-full">
+            <!-- Logo and Navigation -->
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-white hover:text-blue-400 transition-colors" onclick="toggleMobileSidebar()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-xl">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">DevSage</h1>
+                        <p class="text-xs text-white text-opacity-70">Code Suggestions</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search and Actions -->
+            <div class="hidden md:flex items-center gap-4 flex-1 max-w-2xl mx-8">
+                <div class="relative flex-1">
+                    <input type="text" placeholder="Search suggestions, files, or issues..." 
+                           class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 pl-10 text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:border-blue-400">
+                    <i class="fas fa-search absolute left-3 top-3 text-white text-opacity-60"></i>
+                </div>
+                <select class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                    <option>All Repositories</option>
+                    <option>DevSage-Frontend</option>
+                    <option>DevSage-API</option>
+                    <option>DevSage-AI</option>
+                </select>
+            </div>
+            
+            <!-- User Profile -->
+            <div class="flex items-center gap-4">
+                <button class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm transition-colors" onclick="analyzeCode()">
+                    <i class="fas fa-magic mr-2"></i>Analyze Code
+                </button>
+                <div class="flex items-center gap-3 glass rounded-full px-4 py-2 hover-lift cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=100&h=100&fit=crop&crop=face" 
+                         alt="Sarah Chen" class="w-8 h-8 rounded-full object-cover">
+                    <div class="hidden md:block">
+                        <p class="text-sm font-medium">Sarah Chen</p>
+                        <p class="text-xs text-white text-opacity-70">Senior Developer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <div class="flex pt-16 min-h-screen">
+        <!-- Sidebar (Left Panel) -->
+        <aside id="sidebar" class="w-64 glass-dark mobile-hide border-r border-white border-opacity-10">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-home w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-code-branch w-5"></i>
+                        <span>PRs & Commits</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white bg-opacity-10 text-white hover-lift">
+                        <i class="fas fa-lightbulb w-5"></i>
+                        <span class="font-medium">Code Suggestions</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Team Insights</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-file-alt w-5"></i>
+                        <span>Changelogs</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-cog w-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+                
+                <!-- Filter Sidebar -->
+                <div class="mt-8">
+                    <h4 class="text-sm font-medium mb-4 flex items-center gap-2">
+                        <i class="fas fa-filter text-blue-400"></i>
+                        Filters
+                    </h4>
+                    
+                    <!-- Severity Filter -->
+                    <div class="mb-6">
+                        <h5 class="text-xs font-medium text-white text-opacity-70 mb-3 uppercase tracking-wide">Severity</h5>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-red-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span class="text-sm">Critical</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-red-500 bg-opacity-20 text-red-300 px-2 py-1 rounded">3</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-orange-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                    <span class="text-sm">High</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-orange-500 bg-opacity-20 text-orange-300 px-2 py-1 rounded">7</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-yellow-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                    <span class="text-sm">Medium</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-yellow-500 bg-opacity-20 text-yellow-300 px-2 py-1 rounded">12</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-green-500">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span class="text-sm">Low</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-green-500 bg-opacity-20 text-green-300 px-2 py-1 rounded">8</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Type Filter -->
+                    <div class="mb-6">
+                        <h5 class="text-xs font-medium text-white text-opacity-70 mb-3 uppercase tracking-wide">Type</h5>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-blue-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-shield-alt text-blue-400 w-4"></i>
+                                    <span class="text-sm">Security</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">5</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-green-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-tachometer-alt text-green-400 w-4"></i>
+                                    <span class="text-sm">Performance</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-green-500 bg-opacity-20 text-green-300 px-2 py-1 rounded">8</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-purple-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-code text-purple-400 w-4"></i>
+                                    <span class="text-sm">Style</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-purple-500 bg-opacity-20 text-purple-300 px-2 py-1 rounded">9</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-yellow-500" checked>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-wrench text-yellow-400 w-4"></i>
+                                    <span class="text-sm">Maintainability</span>
+                                </div>
+                                <span class="ml-auto text-xs bg-yellow-500 bg-opacity-20 text-yellow-300 px-2 py-1 rounded">8</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div class="mb-6">
+                        <h5 class="text-xs font-medium text-white text-opacity-70 mb-3 uppercase tracking-wide">Status</h5>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-gray-500" checked>
+                                <span class="text-sm">Pending</span>
+                                <span class="ml-auto text-xs bg-gray-500 bg-opacity-20 text-gray-300 px-2 py-1 rounded">22</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-green-500">
+                                <span class="text-sm">Accepted</span>
+                                <span class="ml-auto text-xs bg-green-500 bg-opacity-20 text-green-300 px-2 py-1 rounded">15</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" class="form-checkbox text-red-500">
+                                <span class="text-sm">Rejected</span>
+                                <span class="ml-auto text-xs bg-red-500 bg-opacity-20 text-red-300 px-2 py-1 rounded">3</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="mt-6 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Quick Actions</h4>
+                    <div class="space-y-2">
+                        <button class="w-full bg-green-500 hover:bg-green-600 px-3 py-2 rounded-lg text-sm transition-colors" onclick="acceptAll('critical')">
+                            <i class="fas fa-check-double mr-2"></i>Accept All Critical
+                        </button>
+                        <button class="w-full bg-gray-500 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition-colors" onclick="rejectAll('style')">
+                            <i class="fas fa-times mr-2"></i>Reject All Style
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow overflow-y-auto pb-8">
+            <div class="p-6">
+                <!-- Page Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Code Suggestions</h2>
+                        <p class="text-white text-opacity-80">AI-powered recommendations to improve your code quality</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="glass hover-lift text-white px-4 py-2 rounded-lg text-sm transition-colors" onclick="refreshSuggestions()">
+                            <i class="fas fa-sync mr-2"></i>Refresh
+                        </button>
+                        <select class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                            <option>Sort by Severity</option>
+                            <option>Sort by File</option>
+                            <option>Sort by Type</option>
+                            <option>Sort by Date</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-red-400">3</p>
+                                <p class="text-sm text-white text-opacity-70">Critical Issues</p>
+                            </div>
+                            <div class="bg-red-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in" style="animation-delay: 0.1s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-orange-400">7</p>
+                                <p class="text-sm text-white text-opacity-70">High Priority</p>
+                            </div>
+                            <div class="bg-orange-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-arrow-up text-orange-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-blue-400">87%</p>
+                                <p class="text-sm text-white text-opacity-70">Code Quality</p>
+                            </div>
+                            <div class="bg-blue-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-star text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-green-400">15</p>
+                                <p class="text-sm text-white text-opacity-70">Fixed Today</p>
+                            </div>
+                            <div class="bg-green-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions Bar -->
+                <div class="glass rounded-xl p-4 mb-6 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="selectAll" class="form-checkbox text-blue-500">
+                            <span class="text-sm">Select All Visible</span>
+                        </label>
+                        <span class="text-sm text-white text-opacity-70">30 suggestions found</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="bulkAccept()">
+                            <i class="fas fa-check mr-2"></i>Accept Selected
+                        </button>
+                        <button class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="bulkReject()">
+                            <i class="fas fa-times mr-2"></i>Reject Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Suggestions List -->
+                <div class="space-y-4" id="suggestionsList">
+                    <!-- Critical Security Suggestion -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in severity-critical border-l-4" data-severity="critical" data-type="security">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <input type="checkbox" class="form-checkbox text-blue-500 suggestion-checkbox">
+                                <div class="flex items-center gap-3">
+                                    <span class="bg-red-500 px-3 py-1 rounded-full text-xs font-medium">CRITICAL</span>
+                                    <div class="bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded text-xs flex items-center gap-1">
+                                        <i class="fas fa-shield-alt"></i>
+                                        Security
+                                    </div>
+                                    <span class="text-sm text-white text-opacity-60">auth.js:142</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-white text-opacity-60">
+                                <i class="fas fa-clock"></i>
+                                <span>2 hours ago</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-bug text-red-400"></i>
+                            SQL Injection Vulnerability Detected
+                        </h3>
+                        
+                        <p class="text-white text-opacity-80 mb-4">
+                            Direct string concatenation in SQL query can lead to SQL injection attacks. This is a critical security vulnerability that should be addressed immediately.
+                        </p>
+
+                        <!-- Code Preview -->
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-code text-white text-opacity-70"></i>
+                                <span class="text-sm font-medium">Current Code (Vulnerable)</span>
+                            </div>
+                            <div class="code-block code-diff-before p-4 mb-3">
+                                <code class="text-sm text-red-300">
+                                    <span class="text-white text-opacity-50">// Line 142</span><br>
+                                    const query = "SELECT * FROM users WHERE id = " + userId;<br>
+                                    const result = await db.query(query);
+                                </code>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-magic text-green-400"></i>
+                                <span class="text-sm font-medium">Suggested Fix</span>
+                            </div>
+                            <div class="code-block code-diff-after p-4">
+                                <code class="text-sm text-green-300">
+                                    <span class="text-white text-opacity-50">// Line 142</span><br>
+                                    const query = "SELECT * FROM users WHERE id = ?";<br>
+                                    const result = await db.query(query, [userId]);
+                                </code>
+                            </div>
+                        </div>
+
+                        <!-- Additional Details (Expandable) -->
+                        <div class="mb-4">
+                            <button class="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm transition-colors" onclick="toggleDetails(this)">
+                                <i class="fas fa-chevron-right transition-transform"></i>
+                                <span>Show Details & Impact Analysis</span>
+                            </button>
+                            <div class="expandable-content mt-3">
+                                <div class="glass-dark rounded-xl p-4 space-y-3">
+                                    <div>
+                                        <h4 class="font-medium text-red-400 mb-2">Security Impact:</h4>
+                                        <ul class="text-sm text-white text-opacity-80 space-y-1 list-disc list-inside">
+                                            <li>Attackers can execute arbitrary SQL commands</li>
+                                            <li>Potential data breach affecting user information</li>
+                                            <li>Database corruption or deletion possible</li>
+                                            <li>Compliance violations (GDPR, HIPAA)</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-blue-400 mb-2">Recommended Actions:</h4>
+                                        <ul class="text-sm text-white text-opacity-80 space-y-1 list-disc list-inside">
+                                            <li>Use parameterized queries or prepared statements</li>
+                                            <li>Implement input validation and sanitization</li>
+                                            <li>Consider using an ORM like Sequelize or Prisma</li>
+                                            <li>Add security testing to CI/CD pipeline</li>
+                                        </ul>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-xs">
+                                        <span class="text-white text-opacity-60">Confidence: 98%</span>
+                                        <span class="text-white text-opacity-60">Fix Time: ~5 minutes</span>
+                                        <span class="text-white text-opacity-60">Similar Issues: 2 found</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <button class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="acceptSuggestion(this)">
+                                    <i class="fas fa-check mr-2"></i>Accept & Apply Fix
+                                </button>
+                                <button class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="rejectSuggestion(this)">
+                                    <i class="fas fa-times mr-2"></i>Reject
+                                </button>
+                                <button class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="showMoreDetails(this)">
+                                    <i class="fas fa-info-circle mr-2"></i>More Info
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-white text-opacity-60">
+                                <button class="hover:text-white transition-colors tooltip" data-tooltip="Mark as false positive">
+                                    <i class="fas fa-flag"></i>
+                                </button>
+                                <button class="hover:text-white transition-colors tooltip" data-tooltip="Snooze for 24h">
+                                    <i class="fas fa-clock"></i>
+                                </button>
+                                <button class="hover:text-white transition-colors tooltip" data-tooltip="Share with team">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Suggestion -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in severity-high border-l-4" style="animation-delay: 0.1s" data-severity="high" data-type="performance">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <input type="checkbox" class="form-checkbox text-blue-500 suggestion-checkbox">
+                                <div class="flex items-center gap-3">
+                                    <span class="bg-orange-500 px-3 py-1 rounded-full text-xs font-medium">HIGH</span>
+                                    <div class="bg-green-500 bg-opacity-20 text-green-300 px-2 py-1 rounded text-xs flex items-center gap-1">
+                                        <i class="fas fa-tachometer-alt"></i>
+                                        Performance
+                                    </div>
+                                    <span class="text-sm text-white text-opacity-60">utils.js:89</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-white text-opacity-60">
+                                <i class="fas fa-clock"></i>
+                                <span>4 hours ago</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-rocket text-orange-400"></i>
+                            Optimize Array Processing Performance
+                        </h3>
+                        
+                        <p class="text-white text-opacity-80 mb-4">
+                            Using forEach() for array transformation is less efficient than map(). This change could improve performance by ~15% for large datasets.
+                        </p>
+
+                        <!-- Code Preview -->
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-code text-white text-opacity-70"></i>
+                                <span class="text-sm font-medium">Current Code</span>
+                            </div>
+                            <div class="code-block code-diff-before p-4 mb-3">
+                                <code class="text-sm text-red-300">
+                                    <span class="text-white text-opacity-50">// Line 89-93</span><br>
+                                    const results = [];<br>
+                                    data.forEach(item => {<br>
+                                    &nbsp;&nbsp;results.push(processItem(item));<br>
+                                    });
+                                </code>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-magic text-green-400"></i>
+                                <span class="text-sm font-medium">Optimized Code</span>
+                            </div>
+                            <div class="code-block code-diff-after p-4">
+                                <code class="text-sm text-green-300">
+                                    <span class="text-white text-opacity-50">// Line 89</span><br>
+                                    const results = data.map(item => processItem(item));
+                                </code>
+                            </div>
+                        </div>
+
+                        <!-- Performance Metrics -->
+                        <div class="mb-4 p-4 glass-dark rounded-xl">
+                            <h4 class="font-medium mb-3 flex items-center gap-2">
+                                <i class="fas fa-chart-line text-green-400"></i>
+                                Performance Impact
+                            </h4>
+                            <div class="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <p class="text-2xl font-bold text-green-400">15%</p>
+                                    <p class="text-xs text-white text-opacity-70">Faster Execution</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold text-blue-400">-3</p>
+                                    <p class="text-xs text-white text-opacity-70">Lines Reduced</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold text-purple-400">Better</p>
+                                    <p class="text-xs text-white text-opacity-70">Readability</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <button class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="acceptSuggestion(this)">
+                                    <i class="fas fa-check mr-2"></i>Accept
+                                </button>
+                                <button class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="rejectSuggestion(this)">
+                                    <i class="fas fa-times mr-2"></i>Reject
+                                </button>
+                                <button class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="modifySuggestion(this)">
+                                    <i class="fas fa-edit mr-2"></i>Modify
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-white text-opacity-60">
+                                <span>Confidence: 92%</span>
+                                <button class="hover:text-white transition-colors tooltip" data-tooltip="Run performance test">
+                                    <i class="fas fa-play-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Style/Maintainability Suggestion -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in severity-medium border-l-4" style="animation-delay: 0.2s" data-severity="medium" data-type="maintainability">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <input type="checkbox" class="form-checkbox text-blue-500 suggestion-checkbox">
+                                <div class="flex items-center gap-3">
+                                    <span class="bg-yellow-500 px-3 py-1 rounded-full text-xs font-medium">MEDIUM</span>
+                                    <div class="bg-yellow-500 bg-opacity-20 text-yellow-300 px-2 py-1 rounded text-xs flex items-center gap-1">
+                                        <i class="fas fa-wrench"></i>
+                                        Maintainability
+                                    </div>
+                                    <span class="text-sm text-white text-opacity-60">config.js:23</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-white text-opacity-60">
+                                <i class="fas fa-clock"></i>
+                                <span>6 hours ago</span>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                            <i class="fas fa-magic text-yellow-400"></i>
+                            Extract Magic Numbers to Constants
+                        </h3>
+                        
+                        <p class="text-white text-opacity-80 mb-4">
+                            Replace hardcoded timeout value (5000) with a named constant for better maintainability and configuration management.
+                        </p>
+
+                        <!-- Code Preview -->
+                        <div class="mb-4">
+                            <div class="code-block code-diff-before p-4 mb-3">
+                                <code class="text-sm text-red-300">
+                                    const timeout = 5000; // Magic number
+                                </code>
+                            </div>
+                            <div class="code-block code-diff-after p-4">
+                                <code class="text-sm text-green-300">
+                                    const DEFAULT_TIMEOUT_MS = 5000;<br>
+                                    const timeout = DEFAULT_TIMEOUT_MS;
+                                </code>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <button class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="acceptSuggestion(this)">
+                                    <i class="fas fa-check mr-2"></i>Accept
+                                </button>
+                                <button class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm transition-colors" onclick="rejectSuggestion(this)">
+                                    <i class="fas fa-times mr-2"></i>Reject
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-white text-opacity-60">
+                                <span>Confidence: 85%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Load More Button -->
+                    <div class="text-center py-6">
+                        <button class="glass hover-lift px-6 py-3 rounded-xl text-white transition-colors" onclick="loadMoreSuggestions()">
+                            <i class="fas fa-chevron-down mr-2"></i>Load More Suggestions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 modal-overlay hidden z-40 flex items-center justify-center">
+        <div class="glass-dark rounded-2xl p-8 text-center">
+            <div class="spinner border-4 border-white border-opacity-20 border-t-purple-400 w-12 h-12 rounded-full mx-auto mb-4"></div>
+            <p class="text-white">Analyzing code for suggestions...</p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle mobile sidebar
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-hide');
+        }
+
+        // Toggle expandable details
+        function toggleDetails(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            content.classList.toggle('expanded');
+            icon.classList.toggle('fa-chevron-right');
+            icon.classList.toggle('fa-chevron-down');
+            
+            const span = button.querySelector('span');
+            if (content.classList.contains('expanded')) {
+                span.textContent = 'Hide Details & Impact Analysis';
+            } else {
+                span.textContent = 'Show Details & Impact Analysis';
+            }
+        }
+
+        // Accept suggestion
+        function acceptSuggestion(button) {
+            const suggestionCard = button.closest('.glass');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Applying...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                suggestionCard.classList.add('animate-slide-out');
+                setTimeout(() => {
+                    suggestionCard.style.display = 'none';
+                    updateStats('accepted');
+                }, 300);
+            }, 1500);
+        }
+
+        // Reject suggestion
+        function rejectSuggestion(button) {
+            const suggestionCard = button.closest('.glass');
+            
+            suggestionCard.style.opacity = '0.5';
+            suggestionCard.style.transform = 'scale(0.98)';
+            
+            setTimeout(() => {
+                suggestionCard.classList.add('animate-slide-out');
+                setTimeout(() => {
+                    suggestionCard.style.display = 'none';
+                    updateStats('rejected');
+                }, 300);
+            }, 500);
+        }
+
+        // Bulk actions
+        function bulkAccept() {
+            const checkedBoxes = document.querySelectorAll('.suggestion-checkbox:checked');
+            checkedBoxes.forEach(checkbox => {
+                const suggestionCard = checkbox.closest('.glass');
+                setTimeout(() => {
+                    suggestionCard.classList.add('animate-slide-out');
+                    setTimeout(() => {
+                        suggestionCard.style.display = 'none';
+                    }, 300);
+                }, Math.random() * 1000);
+            });
+            updateStats('bulk-accepted', checkedBoxes.length);
+        }
+
+        function bulkReject() {
+            const checkedBoxes = document.querySelectorAll('.suggestion-checkbox:checked');
+            checkedBoxes.forEach(checkbox => {
+                const suggestionCard = checkbox.closest('.glass');
+                suggestionCard.style.opacity = '0.5';
+                setTimeout(() => {
+                    suggestionCard.classList.add('animate-slide-out');
+                    setTimeout(() => {
+                        suggestionCard.style.display = 'none';
+                    }, 300);
+                }, Math.random() * 500);
+            });
+            updateStats('bulk-rejected', checkedBoxes.length);
+        }
+
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.suggestion-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Filter functionality
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            if (!checkbox.id && !checkbox.classList.contains('suggestion-checkbox')) {
+                checkbox.addEventListener('change', filterSuggestions);
+            }
+        });
+
+        function filterSuggestions() {
+            const suggestions = document.querySelectorAll('[data-severity]');
+            const checkedSeverities = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.closest('label')?.textContent?.trim().toLowerCase())
+                .filter(text => ['critical', 'high', 'medium', 'low'].includes(text));
+            
+            suggestions.forEach(suggestion => {
+                const severity = suggestion.dataset.severity;
+                const shouldShow = checkedSeverities.length === 0 || checkedSeverities.includes(severity);
+                
+                if (shouldShow) {
+                    suggestion.style.display = 'block';
+                    suggestion.classList.add('animate-fade-in');
+                } else {
+                    suggestion.style.display = 'none';
+                }
+            });
+        }
+
+        // Analyze code
+        function analyzeCode() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                // Simulate new suggestions appearing
+                loadMoreSuggestions();
+            }, 3000);
+        }
+
+        // Refresh suggestions
+        function refreshSuggestions() {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Refreshing...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+                // Add some visual feedback
+                const suggestions = document.querySelectorAll('[data-severity]');
+                suggestions.forEach((suggestion, index) => {
+                    setTimeout(() => {
+                        suggestion.classList.add('animate-fade-in');
+                    }, index * 100);
+                });
+            }, 2000);
+        }
+
+        // Load more suggestions
+        function loadMoreSuggestions() {
+            const loadButton = event?.target?.closest('button');
+            if (loadButton) {
+                loadButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+                loadButton.disabled = true;
+            }
+            
+            setTimeout(() => {
+                if (loadButton) {
+                    loadButton.innerHTML = '<i class="fas fa-chevron-down mr-2"></i>Load More Suggestions';
+                    loadButton.disabled = false;
+                }
+                
+                // Simulate adding new suggestions
+                console.log('New suggestions loaded');
+            }, 1500);
+        }
+
+        // Update stats
+        function updateStats(action, count = 1) {
+            const fixedTodayElement = document.querySelector('.text-green-400');
+            if (fixedTodayElement && action.includes('accepted')) {
+                const currentCount = parseInt(fixedTodayElement.textContent);
+                fixedTodayElement.textContent = currentCount + count;
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add fade-in animations to existing suggestions
+            const suggestions = document.querySelectorAll('[data-severity]');
+            suggestions.forEach((suggestion, index) => {
+                suggestion.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

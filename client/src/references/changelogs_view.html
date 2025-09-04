@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Changelogs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        /* Mobile responsive utilities */
+        .mobile-hide {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-hide {
+                display: none;
+            }
+
+            .mobile-show {
+                display: block !important;
+            }
+        }
+
+        /* Status indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #10b981;
+        }
+
+        .status-sync {
+            background: #f59e0b;
+            animation: pulse 2s infinite;
+        }
+
+        .status-offline {
+            background: #ef4444;
+        }
+
+        /* Version timeline styles */
+        .version-timeline {
+            position: relative;
+        }
+
+        .version-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #4facfe, #00f2fe);
+        }
+
+        .version-item {
+            position: relative;
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .version-dot {
+            position: absolute;
+            left: -47px;
+            top: 12px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4facfe;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Changelog category styles */
+        .changelog-feature {
+            border-left: 4px solid #10b981;
+        }
+
+        .changelog-bugfix {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .changelog-breaking {
+            border-left: 4px solid #ef4444;
+        }
+
+        .changelog-improvement {
+            border-left: 4px solid #8b5cf6;
+        }
+
+        /* Accordion styles */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-content.expanded {
+            max-height: 1000px;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header (Fixed Top Bar) -->
+    <header class="fixed top-0 w-full h-16 glass-dark z-50">
+        <div class="flex items-center justify-between px-6 h-full">
+            <!-- Logo and Navigation -->
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-white hover:text-blue-400 transition-colors"
+                    onclick="toggleMobileSidebar()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-xl">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">DevSage</h1>
+                        <p class="text-xs text-white text-opacity-70">Changelogs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Actions -->
+            <div class="hidden md:flex items-center gap-4 flex-1 max-w-2xl mx-8">
+                <div class="relative flex-1">
+                    <input type="text" placeholder="Search versions, features, or changes..."
+                        class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 pl-10 text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:border-blue-400">
+                    <i class="fas fa-search absolute left-3 top-3 text-white text-opacity-60"></i>
+                </div>
+                <select
+                    class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                    <option>All Repositories</option>
+                    <option>DevSage-Frontend</option>
+                    <option>DevSage-API</option>
+                    <option>DevSage-AI</option>
+                </select>
+            </div>
+
+            <!-- User Profile -->
+            <div class="flex items-center gap-4">
+                <button
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                    onclick="generateChangelog()">
+                    <i class="fas fa-magic mr-2"></i>Generate Changelog
+                </button>
+                <div class="flex items-center gap-3 glass rounded-full px-4 py-2 hover-lift cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=100&h=100&fit=crop&crop=face"
+                        alt="Sarah Chen" class="w-8 h-8 rounded-full object-cover">
+                    <div class="hidden md:block">
+                        <p class="text-sm font-medium">Sarah Chen</p>
+                        <p class="text-xs text-white text-opacity-70">Senior Developer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <div class="flex pt-16 min-h-screen">
+        <!-- Sidebar (Left Panel) -->
+        <aside id="sidebar" class="w-64 glass-dark mobile-hide border-r border-white border-opacity-10">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="#"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-home w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-code-branch w-5"></i>
+                        <span>PRs & Commits</span>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-lightbulb w-5"></i>
+                        <span>Code Suggestions</span>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Team Insights</span>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white bg-opacity-10 text-white hover-lift">
+                        <i class="fas fa-file-alt w-5"></i>
+                        <span class="font-medium">Changelogs</span>
+                    </a>
+                    <a href="#"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-cog w-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+
+                <!-- Version Filter -->
+                <div class="mt-8 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Version Filter</h4>
+                    <div class="space-y-2">
+                        <button
+                            class="w-full text-left px-3 py-2 rounded-lg bg-orange-500 bg-opacity-20 text-orange-300 text-sm">
+                            All Versions
+                        </button>
+                        <button
+                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 text-sm transition-colors">
+                            Major Releases
+                        </button>
+                        <button
+                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 text-sm transition-colors">
+                            Minor Updates
+                        </button>
+                        <button
+                            class="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 text-sm transition-colors">
+                            Patch Fixes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Change Type Filter -->
+                <div class="mt-4 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Change Types</h4>
+                    <div class="space-y-2">
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="form-checkbox text-green-500" checked>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span class="text-sm">Features</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="form-checkbox text-yellow-500" checked>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <span class="text-sm">Bug Fixes</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="form-checkbox text-red-500" checked>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span class="text-sm">Breaking Changes</span>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg transition-colors">
+                            <input type="checkbox" class="form-checkbox text-purple-500" checked>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                <span class="text-sm">Improvements</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="mt-4 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Export</h4>
+                    <div class="space-y-2">
+                        <button
+                            class="w-full bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-lg text-sm transition-colors"
+                            onclick="exportChangelog('markdown')">
+                            <i class="fas fa-file-code mr-2"></i>Markdown
+                        </button>
+                        <button
+                            class="w-full bg-green-500 hover:bg-green-600 px-3 py-2 rounded-lg text-sm transition-colors"
+                            onclick="exportChangelog('json')">
+                            <i class="fas fa-file-code mr-2"></i>JSON
+                        </button>
+                        <button
+                            class="w-full bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm transition-colors"
+                            onclick="exportChangelog('pdf')">
+                            <i class="fas fa-file-pdf mr-2"></i>PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow overflow-y-auto pb-8">
+            <div class="p-6">
+                <!-- Page Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Changelogs</h2>
+                        <p class="text-white text-opacity-80">Track your project evolution and version history</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="glass hover-lift text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                            onclick="refreshChangelogs()">
+                            <i class="fas fa-sync mr-2"></i>Refresh
+                        </button>
+                        <select
+                            class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                            <option>Latest First</option>
+                            <option>Oldest First</option>
+                            <option>Major Versions Only</option>
+                            <option>By Release Date</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-blue-400">12</p>
+                                <p class="text-sm text-white text-opacity-70">Total Versions</p>
+                            </div>
+                            <div class="bg-blue-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-tags text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in" style="animation-delay: 0.1s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-green-400">47</p>
+                                <p class="text-sm text-white text-opacity-70">New Features</p>
+                            </div>
+                            <div class="bg-green-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-plus-circle text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-yellow-400">23</p>
+                                <p class="text-sm text-white text-opacity-70">Bug Fixes</p>
+                            </div>
+                            <div class="bg-yellow-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-bug text-yellow-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-4 hover-lift animate-fade-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-2xl font-bold text-red-400">3</p>
+                                <p class="text-sm text-white text-opacity-70">Breaking Changes</p>
+                            </div>
+                            <div class="bg-red-500 bg-opacity-20 p-3 rounded-xl">
+                                <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Version Timeline -->
+                <div class="glass rounded-2xl p-6 hover-lift">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold flex items-center gap-3">
+                            <i class="fas fa-history text-orange-400"></i>
+                            Version History
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-white text-opacity-70">Showing:</span>
+                            <span class="bg-orange-500 bg-opacity-20 text-orange-300 px-2 py-1 rounded text-sm">All
+                                Versions</span>
+                        </div>
+                    </div>
+
+                    <div class="version-timeline">
+                        <!-- Version 2.1.0 - Latest -->
+                        <div class="version-item glass-dark rounded-xl p-6 hover-lift animate-fade-in">
+                            <div class="version-dot bg-green-500"></div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-green-500 px-3 py-1 rounded-full text-sm font-medium">LATEST</div>
+                                    <h4 class="text-xl font-bold">v2.1.0</h4>
+                                    <span class="text-white text-opacity-60">•</span>
+                                    <span class="text-sm text-white text-opacity-70">Authentication System</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm text-white text-opacity-60">Released 2 days ago</span>
+                                    <button
+                                        class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors"
+                                        onclick="toggleAccordion('v2-1-0')">
+                                        <i class="fas fa-chevron-down" id="chevron-v2-1-0"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p class="text-white text-opacity-80 mb-4">
+                                Major update introducing comprehensive JWT-based authentication system with enhanced
+                                security features and role-based access control.
+                            </p>
+
+                            <!-- Accordion Content -->
+                            <div id="accordion-v2-1-0" class="accordion-content expanded">
+                                <div class="border-t border-white border-opacity-10 pt-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-green-400">8</p>
+                                            <p class="text-xs text-white text-opacity-70">New Features</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-yellow-400">5</p>
+                                            <p class="text-xs text-white text-opacity-70">Bug Fixes</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-purple-400">3</p>
+                                            <p class="text-xs text-white text-opacity-70">Improvements</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Detailed Changes -->
+                                    <div class="space-y-4">
+                                        <!-- New Features Section -->
+                                        <div class="changelog-feature glass-dark rounded-xl p-4">
+                                            <h5 class="font-semibold text-green-400 mb-3 flex items-center gap-2">
+                                                <i class="fas fa-plus-circle"></i>
+                                                New Features
+                                            </h5>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">JWT-based Authentication System</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Secure
+                                                            token-based authentication with refresh token rotation</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Role-based Access Control
+                                                            (RBAC)</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Granular
+                                                            permissions system with admin, user, and viewer roles</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Two-Factor Authentication (2FA)</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">TOTP-based
+                                                            2FA support with QR code generation</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Session Management Dashboard</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">View and
+                                                            manage active sessions across devices</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Password Reset Flow</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Secure
+                                                            password reset with email verification</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bug Fixes Section -->
+                                        <div class="changelog-bugfix glass-dark rounded-xl p-4">
+                                            <h5 class="font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+                                                <i class="fas fa-bug"></i>
+                                                Bug Fixes
+                                            </h5>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-wrench text-yellow-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Fixed memory leak in WebSocket
+                                                            connections</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Properly
+                                                            cleanup event listeners on disconnect</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-wrench text-yellow-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Resolved CORS issues with API
+                                                            endpoints</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Updated CORS
+                                                            configuration for production deployment</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-wrench text-yellow-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Fixed race condition in user
+                                                            registration</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Added proper
+                                                            locking mechanism for concurrent requests</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-wrench text-yellow-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Corrected timezone handling in date
+                                                            displays</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">All dates now
+                                                            properly display in user's local timezone</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Improvements Section -->
+                                        <div class="changelog-improvement glass-dark rounded-xl p-4">
+                                            <h5 class="font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                                                <i class="fas fa-arrow-up"></i>
+                                                Improvements
+                                            </h5>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-star text-purple-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Enhanced password strength
+                                                            validation</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Real-time
+                                                            password strength indicator with detailed requirements</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-star text-purple-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Improved login form UX</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Better error
+                                                            messages and loading states</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-star text-purple-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Optimized database queries for auth
+                                                            operations</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">40% faster
+                                                            login and registration performance</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Release Notes -->
+                                    <div class="mt-6 p-4 glass rounded-xl">
+                                        <h5 class="font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                                            <i class="fas fa-info-circle"></i>
+                                            Release Notes
+                                        </h5>
+                                        <div class="text-sm text-white text-opacity-80 space-y-2">
+                                            <p>This release focuses on security and user authentication. All existing
+                                                users will need to log in again after the update.</p>
+                                            <p><strong>Migration Guide:</strong> Existing API tokens will remain valid
+                                                for 30 days. Please update your applications to use the new JWT-based
+                                                authentication.</p>
+                                            <div class="flex items-center gap-2 mt-3">
+                                                <span class="text-xs text-white text-opacity-60">Contributors:</span>
+                                                <div class="flex -space-x-2">
+                                                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=24&h=24&fit=crop&crop=face"
+                                                        class="w-6 h-6 rounded-full border-2 border-white">
+                                                    <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=24&h=24&fit=crop&crop=face"
+                                                        class="w-6 h-6 rounded-full border-2 border-white">
+                                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=24&h=24&fit=crop&crop=face"
+                                                        class="w-6 h-6 rounded-full border-2 border-white">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Version 2.0.1 - Bug Fix -->
+                        <div class="version-item glass-dark rounded-xl p-6 hover-lift animate-fade-in"
+                            style="animation-delay: 0.1s">
+                            <div class="version-dot bg-yellow-500"></div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-yellow-500 px-3 py-1 rounded-full text-sm font-medium">PATCH</div>
+                                    <h4 class="text-xl font-bold">v2.0.1</h4>
+                                    <span class="text-white text-opacity-60">•</span>
+                                    <span class="text-sm text-white text-opacity-70">Critical Bug Fixes</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm text-white text-opacity-60">Released 1 week ago</span>
+                                    <button
+                                        class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors"
+                                        onclick="toggleAccordion('v2-0-1')">
+                                        <i class="fas fa-chevron-right" id="chevron-v2-0-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p class="text-white text-opacity-80 mb-4">
+                                Critical patch addressing security vulnerabilities and performance issues discovered in
+                                v2.0.0.
+                            </p>
+
+                            <!-- Accordion Content (Collapsed) -->
+                            <div id="accordion-v2-0-1" class="accordion-content">
+                                <div class="border-t border-white border-opacity-10 pt-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-green-400">0</p>
+                                            <p class="text-xs text-white text-opacity-70">New Features</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-yellow-400">7</p>
+                                            <p class="text-xs text-white text-opacity-70">Bug Fixes</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-purple-400">2</p>
+                                            <p class="text-xs text-white text-opacity-70">Improvements</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Critical Bug Fixes -->
+                                    <div class="space-y-4">
+                                        <div class="changelog-bugfix glass-dark rounded-xl p-4">
+                                            <h5 class="font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Critical Bug Fixes
+                                            </h5>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-shield-alt text-red-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium text-red-300">Fixed SQL injection
+                                                            vulnerability in user search</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">CVE-2024-0001
+                                                            - Parameterized queries now used throughout</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-shield-alt text-red-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium text-red-300">Patched XSS vulnerability
+                                                            in comment system</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">All user
+                                                            input now properly sanitized</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-wrench text-yellow-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Fixed database connection pool
+                                                            exhaustion</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Improved
+                                                            connection management and cleanup</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-wrench text-yellow-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Resolved file upload size limit
+                                                            bypass</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Server-side
+                                                            validation now properly enforced</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="changelog-improvement glass-dark rounded-xl p-4">
+                                            <h5 class="font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                                                <i class="fas fa-arrow-up"></i>
+                                                Performance Improvements
+                                            </h5>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-star text-purple-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Optimized API response times by
+                                                            60%</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Improved
+                                                            database indexing and query optimization</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-star text-purple-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Reduced memory usage by 25%</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Better
+                                                            garbage collection and object pooling</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Version 2.0.0 - Major Release -->
+                        <div class="version-item glass-dark rounded-xl p-6 hover-lift animate-fade-in"
+                            style="animation-delay: 0.2s">
+                            <div class="version-dot bg-red-500"></div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-red-500 px-3 py-1 rounded-full text-sm font-medium">MAJOR</div>
+                                    <h4 class="text-xl font-bold">v2.0.0</h4>
+                                    <span class="text-white text-opacity-60">•</span>
+                                    <span class="text-sm text-white text-opacity-70">Complete Rewrite</span>
+                                    <div class="bg-red-500 bg-opacity-20 text-red-300 px-2 py-1 rounded text-xs">
+                                        BREAKING</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm text-white text-opacity-60">Released 3 weeks ago</span>
+                                    <button
+                                        class="bg-white bg-opacity-10 hover:bg-opacity-20 px-3 py-2 rounded-lg text-sm transition-colors"
+                                        onclick="toggleAccordion('v2-0-0')">
+                                        <i class="fas fa-chevron-right" id="chevron-v2-0-0"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p class="text-white text-opacity-80 mb-4">
+                                Major version release with complete architecture overhaul, new React-based UI, and
+                                breaking API changes.
+                            </p>
+
+                            <!-- Accordion Content (Collapsed) -->
+                            <div id="accordion-v2-0-0" class="accordion-content">
+                                <div class="border-t border-white border-opacity-10 pt-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-green-400">15</p>
+                                            <p class="text-xs text-white text-opacity-70">New Features</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-yellow-400">8</p>
+                                            <p class="text-xs text-white text-opacity-70">Bug Fixes</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-purple-400">12</p>
+                                            <p class="text-xs text-white text-opacity-70">Improvements</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-2xl font-bold text-red-400">3</p>
+                                            <p class="text-xs text-white text-opacity-70">Breaking</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Breaking Changes Warning -->
+                                    <div
+                                        class="changelog-breaking glass-dark rounded-xl p-4 mb-4 border border-red-500 border-opacity-30">
+                                        <h5 class="font-semibold text-red-400 mb-3 flex items-center gap-2">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            Breaking Changes
+                                        </h5>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex items-start gap-3">
+                                                <i class="fas fa-times-circle text-red-400 mt-1"></i>
+                                                <div>
+                                                    <span class="font-medium text-red-300">API endpoints
+                                                        restructured</span>
+                                                    <p class="text-white text-opacity-70 text-xs mt-1">All API routes
+                                                        now use /api/v2/ prefix. v1 endpoints deprecated.</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start gap-3">
+                                                <i class="fas fa-times-circle text-red-400 mt-1"></i>
+                                                <div>
+                                                    <span class="font-medium text-red-300">Database schema
+                                                        changes</span>
+                                                    <p class="text-white text-opacity-70 text-xs mt-1">User table
+                                                        restructured. Migration script required.</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-start gap-3">
+                                                <i class="fas fa-times-circle text-red-400 mt-1"></i>
+                                                <div>
+                                                    <span class="font-medium text-red-300">Configuration format
+                                                        updated</span>
+                                                    <p class="text-white text-opacity-70 text-xs mt-1">Config files now
+                                                        use YAML instead of JSON.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Major Features -->
+                                    <div class="space-y-4">
+                                        <div class="changelog-feature glass-dark rounded-xl p-4">
+                                            <h5 class="font-semibold text-green-400 mb-3 flex items-center gap-2">
+                                                <i class="fas fa-rocket"></i>
+                                                Major New Features
+                                            </h5>
+                                            <div class="space-y-2 text-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Complete React-based UI rewrite</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Modern,
+                                                            responsive interface with improved UX</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Real-time collaboration
+                                                            features</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Live editing,
+                                                            comments, and notifications</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Advanced search and filtering</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Full-text
+                                                            search with faceted filtering</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-3">
+                                                    <i class="fas fa-check text-green-400 mt-1"></i>
+                                                    <div>
+                                                        <span class="font-medium">Mobile-first responsive design</span>
+                                                        <p class="text-white text-opacity-70 text-xs mt-1">Optimized for
+                                                            all device sizes</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Migration Guide -->
+                                    <div class="mt-6 p-4 glass rounded-xl border border-blue-500 border-opacity-30">
+                                        <h5 class="font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                                            <i class="fas fa-book"></i>
+                                            Migration Guide
+                                        </h5>
+                                        <div class="text-sm text-white text-opacity-80 space-y-2">
+                                            <p><strong>Before upgrading:</strong> Please backup your database and
+                                                configuration files.</p>
+                                            <p><strong>Migration steps:</strong></p>
+                                            <ol class="list-decimal list-inside space-y-1 ml-4">
+                                                <li>Run the database migration script: <code
+                                                        class="bg-black bg-opacity-30 px-2 py-1 rounded">npm run migrate</code>
+                                                </li>
+                                                <li>Update your configuration files to YAML format</li>
+                                                <li>Update API endpoints in your applications to use /api/v2/</li>
+                                                <li>Test thoroughly in a staging environment</li>
+                                            </ol>
+                                            <p><strong>Support:</strong> v1 API will be supported until v2.2.0 release.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Load More Button -->
+                        <div class="text-center py-6">
+                            <button class="glass hover-lift px-6 py-3 rounded-xl text-white transition-colors"
+                                onclick="loadMoreVersions()">
+                                <i class="fas fa-chevron-down mr-2"></i>Load More Versions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Generate Changelog Modal -->
+    <div id="generateModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-dark rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold">Generate New Changelog</h3>
+                <button onclick="hideGenerateModal()" class="text-white text-opacity-70 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form class="space-y-6">
+                <!-- Version Input -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Version Number</label>
+                    <input type="text" placeholder="e.g., 2.2.0"
+                        class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-3 text-white placeholder-white placeholder-opacity-60">
+                </div>
+
+                <!-- Version Type -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Release Type</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label
+                            class="flex items-center gap-2 cursor-pointer p-3 glass rounded-lg hover:bg-white hover:bg-opacity-10">
+                            <input type="radio" name="releaseType" value="major" class="text-red-500">
+                            <div>
+                                <div class="font-medium text-red-400">Major</div>
+                                <div class="text-xs text-white text-opacity-60">Breaking changes</div>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-2 cursor-pointer p-3 glass rounded-lg hover:bg-white hover:bg-opacity-10">
+                            <input type="radio" name="releaseType" value="minor" class="text-green-500" checked>
+                            <div>
+                                <div class="font-medium text-green-400">Minor</div>
+                                <div class="text-xs text-white text-opacity-60">New features</div>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-2 cursor-pointer p-3 glass rounded-lg hover:bg-white hover:bg-opacity-10">
+                            <input type="radio" name="releaseType" value="patch" class="text-yellow-500">
+                            <div>
+                                <div class="font-medium text-yellow-400">Patch</div>
+                                <div class="text-xs text-white text-opacity-60">Bug fixes</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">From Date</label>
+                        <input type="date"
+                            class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-3 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">To Date</label>
+                        <input type="date"
+                            class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-3 text-white">
+                    </div>
+                </div>
+
+                <!-- Repository Selection -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Repositories</label>
+                    <div class="space-y-2">
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg">
+                            <input type="checkbox" class="form-checkbox text-blue-500" checked>
+                            <span class="text-sm">DevSage-Frontend</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg">
+                            <input type="checkbox" class="form-checkbox text-blue-500" checked>
+                            <span class="text-sm">DevSage-API</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg">
+                            <input type="checkbox" class="form-checkbox text-blue-500">
+                            <span class="text-sm">DevSage-AI</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- AI Options -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">AI Generation Options</label>
+                    <div class="space-y-2">
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg">
+                            <input type="checkbox" class="form-checkbox text-purple-500" checked>
+                            <span class="text-sm">Auto-categorize changes</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg">
+                            <input type="checkbox" class="form-checkbox text-purple-500" checked>
+                            <span class="text-sm">Generate descriptions</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 cursor-pointer hover:bg-white hover:bg-opacity-5 p-2 rounded-lg">
+                            <input type="checkbox" class="form-checkbox text-purple-500">
+                            <span class="text-sm">Include migration notes</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" onclick="hideGenerateModal()"
+                        class="px-6 py-3 glass rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg transition-colors">
+                        <i class="fas fa-magic mr-2"></i>Generate Changelog
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 modal-overlay hidden z-40 flex items-center justify-center">
+        <div class="glass-dark rounded-2xl p-8 text-center">
+            <div
+                class="spinner border-4 border-white border-opacity-20 border-t-orange-400 w-12 h-12 rounded-full mx-auto mb-4">
+            </div>
+            <p class="text-white">Generating changelog...</p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle mobile sidebar
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-hide');
+        }
+
+        // Toggle accordion functionality
+        function toggleAccordion(versionId) {
+            const accordion = document.getElementById(`accordion-${versionId}`);
+            const chevron = document.getElementById(`chevron-${versionId}`);
+
+            if (accordion.classList.contains('expanded')) {
+                accordion.classList.remove('expanded');
+                chevron.classList.remove('fa-chevron-down');
+                chevron.classList.add('fa-chevron-right');
+            } else {
+                accordion.classList.add('expanded');
+                chevron.classList.remove('fa-chevron-right');
+                chevron.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Generate changelog modal
+        function generateChangelog() {
+            document.getElementById('generateModal').classList.remove('hidden');
+        }
+
+        function hideGenerateModal() {
+            document.getElementById('generateModal').classList.add('hidden');
+        }
+
+        // Export changelog functionality
+        function exportChangelog(format) {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // Simulate download
+                const link = document.createElement('a');
+                const filename = `changelog-v2.1.0.${format}`;
+                let content = '';
+
+                switch (format) {
+                    case 'markdown':
+                        content = generateMarkdownChangelog();
+                        break;
+                    case 'json':
+                        content = generateJSONChangelog();
+                        break;
+                    case 'pdf':
+                        // In real implementation, this would generate a PDF
+                        content = 'PDF generation would be implemented here';
+                        break;
+                }
+
+                const blob = new Blob([content], { type: 'text/plain' });
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+            }, 2000);
+        }
+
+        // Generate markdown changelog
+        function generateMarkdownChangelog() {
+            return `# Changelog
+
+## v2.1.0 - Authentication System (2024-01-15)
+
+### New Features
+- JWT-based Authentication System
+- Role-based Access Control (RBAC)
+- Two-Factor Authentication (2FA)
+- Session Management Dashboard
+- Password Reset Flow
+
+### Bug Fixes
+- Fixed memory leak in WebSocket connections
+- Resolved CORS issues with API endpoints
+- Fixed race condition in user registration
+- Corrected timezone handling in date displays
+
+### Improvements
+- Enhanced password strength validation
+- Improved login form UX
+- Optimized database queries for auth operations
+
+### Release Notes
+This release focuses on security and user authentication. All existing users will need to log in again after the update.
+
+**Migration Guide:** Existing API tokens will remain valid for 30 days. Please update your applications to use the new JWT-based authentication.
+`;
+        }
+
+        // Generate JSON changelog
+        function generateJSONChangelog() {
+            return JSON.stringify({
+                version: "2.1.0",
+                releaseDate: "2024-01-15",
+                title: "Authentication System",
+                features: [
+                    "JWT-based Authentication System",
+                    "Role-based Access Control (RBAC)",
+                    "Two-Factor Authentication (2FA)",
+                    "Session Management Dashboard",
+                    "Password Reset Flow"
+                ],
+                bugFixes: [
+                    "Fixed memory leak in WebSocket connections",
+                    "Resolved CORS issues with API endpoints",
+                    "Fixed race condition in user registration",
+                    "Corrected timezone handling in date displays"
+                ],
+                improvements: [
+                    "Enhanced password strength validation",
+                    "Improved login form UX",
+                    "Optimized database queries for auth operations"
+                ],
+                notes: "This release focuses on security and user authentication. All existing users will need to log in again after the update."
+            }, null, 2);
+        }
+
+        // Refresh changelogs
+        function refreshChangelogs() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+
+                // Simulate refresh animation
+                const versionItems = document.querySelectorAll('.version-item');
+                versionItems.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.classList.add('animate-fade-in');
+                    }, index * 100);
+                });
+            }, 2000);
+        }
+
+        // Load more versions
+        function loadMoreVersions() {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // In real implementation, this would load more versions
+                console.log('Loading more versions...');
+            }, 1500);
+        }
+
+        // Filter functionality
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            if (!checkbox.closest('#generateModal')) {
+                checkbox.addEventListener('change', filterChangelogs);
+            }
+        });
+
+        function filterChangelogs() {
+            // Get checked change types
+            const checkedTypes = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.closest('label')?.textContent?.trim().toLowerCase())
+                .filter(text => ['features', 'bug fixes', 'breaking changes', 'improvements'].includes(text));
+
+            // Filter version items based on selected types
+            const versionItems = document.querySelectorAll('.version-item');
+            versionItems.forEach(item => {
+                // In a real implementation, this would filter based on the content
+                // For now, we'll just show all items
+                item.style.display = 'block';
+            });
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('generateModal').addEventListener('click', (e) => {
+            if (e.target.id === 'generateModal') {
+                hideGenerateModal();
+            }
+        });
+
+        // Form submission for changelog generation
+        document.querySelector('#generateModal form').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            hideGenerateModal();
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+
+                // In real implementation, this would generate and add a new changelog entry
+                alert('Changelog generated successfully! (This would add a new version to the timeline)');
+            }, 3000);
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add fade-in animations to version items
+            const versionItems = document.querySelectorAll('.version-item');
+            versionItems.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+
+</html>

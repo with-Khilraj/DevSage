@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Team Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Progress bar animations */
+        .progress-bar {
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .progress-fill {
+            transition: width 1s ease-in-out;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        /* Mobile responsive utilities */
+        .mobile-hide { display: block; }
+        @media (max-width: 768px) {
+            .mobile-hide { display: none; }
+            .mobile-show { display: block !important; }
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online { background: #10b981; }
+        .status-sync { background: #f59e0b; animation: pulse 2s infinite; }
+        .status-offline { background: #ef4444; }
+        
+        /* Chart container styles */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        /* Metric trend indicators */
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        .trend-stable { color: #6b7280; }
+        
+        /* Heatmap styles */
+        .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin: 1px;
+            transition: all 0.2s ease;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.2);
+        }
+        
+        .heatmap-level-0 { background: rgba(255, 255, 255, 0.1); }
+        .heatmap-level-1 { background: rgba(34, 197, 94, 0.3); }
+        .heatmap-level-2 { background: rgba(34, 197, 94, 0.5); }
+        .heatmap-level-3 { background: rgba(34, 197, 94, 0.7); }
+        .heatmap-level-4 { background: rgba(34, 197, 94, 0.9); }
+        
+        /* Recommendation styles */
+        .recommendation-priority-high { border-left: 4px solid #ef4444; }
+        .recommendation-priority-medium { border-left: 4px solid #f59e0b; }
+        .recommendation-priority-low { border-left: 4px solid #10b981; }
+        
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header (Fixed Top Bar) -->
+    <header class="fixed top-0 w-full h-16 glass-dark z-50">
+        <div class="flex items-center justify-between px-6 h-full">
+            <!-- Logo and Navigation -->
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-white hover:text-blue-400 transition-colors" onclick="toggleMobileSidebar()">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-xl">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">DevSage</h1>
+                        <p class="text-xs text-white text-opacity-70">Team Insights</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search and Actions -->
+            <div class="hidden md:flex items-center gap-4 flex-1 max-w-2xl mx-8">
+                <div class="relative flex-1">
+                    <input type="text" placeholder="Search team members, metrics, or insights..." 
+                           class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 pl-10 text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:border-blue-400">
+                    <i class="fas fa-search absolute left-3 top-3 text-white text-opacity-60"></i>
+                </div>
+                <select class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                    <option>All Teams</option>
+                    <option>Frontend Team</option>
+                    <option>Backend Team</option>
+                    <option>DevOps Team</option>
+                </select>
+            </div>
+            
+            <!-- User Profile -->
+            <div class="flex items-center gap-4">
+                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors" onclick="generateReport()">
+                    <i class="fas fa-file-export mr-2"></i>Export Report
+                </button>
+                <div class="flex items-center gap-3 glass rounded-full px-4 py-2 hover-lift cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=100&h=100&fit=crop&crop=face" 
+                         alt="Sarah Chen" class="w-8 h-8 rounded-full object-cover">
+                    <div class="hidden md:block">
+                        <p class="text-sm font-medium">Sarah Chen</p>
+                        <p class="text-xs text-white text-opacity-70">Team Lead</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <div class="flex pt-16 min-h-screen">
+        <!-- Sidebar (Left Panel) -->
+        <aside id="sidebar" class="w-64 glass-dark mobile-hide border-r border-white border-opacity-10">
+            <div class="p-6">
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-home w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-code-branch w-5"></i>
+                        <span>PRs & Commits</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-lightbulb w-5"></i>
+                        <span>Code Suggestions</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white bg-opacity-10 text-white hover-lift">
+                        <i class="fas fa-users w-5"></i>
+                        <span class="font-medium">Team Insights</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-file-alt w-5"></i>
+                        <span>Changelogs</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-white text-opacity-80 hover:bg-white hover:bg-opacity-10 hover:text-white transition-all hover-lift">
+                        <i class="fas fa-cog w-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+                
+                <!-- Team Selector -->
+                <div class="mt-8 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Current Team</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-users text-blue-400"></i>
+                            <span class="text-sm">Frontend Team</span>
+                        </div>
+                        <div class="text-xs text-white text-opacity-60">
+                            <div>8 members</div>
+                            <div>3 repositories</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Time Range Filter -->
+                <div class="mt-4 p-4 glass rounded-xl">
+                    <h4 class="text-sm font-medium mb-3">Time Range</h4>
+                    <div class="space-y-2">
+                        <button class="w-full text-left px-3 py-2 rounded-lg bg-blue-500 bg-opacity-20 text-blue-300 text-sm">
+                            Last 30 Days
+                        </button>
+                        <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 text-sm transition-colors">
+                            Last 7 Days
+                        </button>
+                        <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 text-sm transition-colors">
+                            Last 3 Months
+                        </button>
+                        <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 text-sm transition-colors">
+                            Custom Range
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow overflow-y-auto pb-8">
+            <div class="p-6">
+                <!-- Page Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Team Insights Dashboard</h2>
+                        <p class="text-white text-opacity-80">Analytics and insights for your development team</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="glass hover-lift text-white px-4 py-2 rounded-lg text-sm transition-colors" onclick="refreshInsights()">
+                            <i class="fas fa-sync mr-2"></i>Refresh
+                        </button>
+                        <select class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                            <option>All Repositories</option>
+                            <option>DevSage-Frontend</option>
+                            <option>DevSage-API</option>
+                            <option>DevSage-AI</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Team Velocity -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-xl">
+                                <i class="fas fa-rocket text-white text-xl"></i>
+                            </div>
+                            <span class="text-blue-400 text-sm font-medium flex items-center gap-1 trend-up">
+                                <i class="fas fa-arrow-up"></i>
+                                +12.5%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">156</h3>
+                        <p class="text-white text-opacity-70 text-sm">Story Points/Sprint</p>
+                        <div class="mt-4">
+                            <div class="progress-bar h-2 rounded-full">
+                                <div class="progress-fill h-full rounded-full" style="width: 78%"></div>
+                            </div>
+                            <p class="text-xs text-white text-opacity-60 mt-1">78% of target velocity</p>
+                        </div>
+                    </div>
+
+                    <!-- Code Quality Score -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in" style="animation-delay: 0.1s">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-green-500 to-emerald-500 p-3 rounded-xl">
+                                <i class="fas fa-star text-white text-xl"></i>
+                            </div>
+                            <span class="text-green-400 text-sm font-medium flex items-center gap-1 trend-up">
+                                <i class="fas fa-arrow-up"></i>
+                                +3.2%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">92%</h3>
+                        <p class="text-white text-opacity-70 text-sm">Team Code Quality</p>
+                        <div class="mt-4">
+                            <div class="progress-bar h-2 rounded-full">
+                                <div class="progress-fill h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500" style="width: 92%"></div>
+                            </div>
+                            <p class="text-xs text-white text-opacity-60 mt-1">Excellent rating</p>
+                        </div>
+                    </div>
+
+                    <!-- Test Coverage -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-xl">
+                                <i class="fas fa-shield-alt text-white text-xl"></i>
+                            </div>
+                            <span class="text-purple-400 text-sm font-medium flex items-center gap-1 trend-up">
+                                <i class="fas fa-arrow-up"></i>
+                                +5.8%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">87%</h3>
+                        <p class="text-white text-opacity-70 text-sm">Test Coverage</p>
+                        <div class="mt-4">
+                            <div class="progress-bar h-2 rounded-full">
+                                <div class="progress-fill h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500" style="width: 87%"></div>
+                            </div>
+                            <p class="text-xs text-white text-opacity-60 mt-1">Above target (80%)</p>
+                        </div>
+                    </div>
+
+                    <!-- PR Review Time -->
+                    <div class="glass rounded-2xl p-6 hover-lift animate-fade-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-500 p-3 rounded-xl">
+                                <i class="fas fa-clock text-white text-xl"></i>
+                            </div>
+                            <span class="text-orange-400 text-sm font-medium flex items-center gap-1 trend-down">
+                                <i class="fas fa-arrow-down"></i>
+                                -18.3%
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">2.4h</h3>
+                        <p class="text-white text-opacity-70 text-sm">Avg Review Time</p>
+                        <div class="mt-4 flex -space-x-2">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full border-2 border-white">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full border-2 border-white">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b9e4b048?w=32&h=32&fit=crop&crop=face" class="w-6 h-6 rounded-full border-2 border-white">
+                            <span class="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-xs border-2 border-white">+5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Coding Patterns Chart -->
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-3">
+                                <i class="fas fa-chart-bar text-blue-400"></i>
+                                Coding Patterns
+                            </h3>
+                            <select class="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-3 py-2 text-white text-sm">
+                                <option>Last 30 Days</option>
+                                <option>Last 7 Days</option>
+                                <option>Last 3 Months</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="codingPatternsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Quality Trends Chart -->
+                    <div class="glass rounded-2xl p-6 hover-lift">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold flex items-center gap-3">
+                                <i class="fas fa-chart-line text-green-400"></i>
+                                Quality Trends
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-white text-opacity-70">Trend:</span>
+                                <span class="text-green-400 text-sm font-medium">Improving</span>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="qualityTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Toggle mobile sidebar
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-hide');
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Coding Patterns Chart
+            const codingPatternsCtx = document.getElementById('codingPatternsChart').getContext('2d');
+            new Chart(codingPatternsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Frontend', 'Backend', 'DevOps', 'Testing', 'Documentation'],
+                    datasets: [{
+                        label: 'Hours Spent',
+                        data: [45, 38, 12, 25, 8],
+                        backgroundColor: [
+                            'rgba(79, 172, 254, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(79, 172, 254, 1)',
+                            'rgba(34, 197, 94, 1)',
+                            'rgba(168, 85, 247, 1)',
+                            'rgba(251, 191, 36, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Quality Trends Chart
+            const qualityTrendsCtx = document.getElementById('qualityTrendsChart').getContext('2d');
+            new Chart(qualityTrendsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Code Quality Score',
+                        data: [85, 87, 89, 88, 91, 92],
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Test Coverage',
+                        data: [78, 80, 82, 84, 85, 87],
+                        borderColor: 'rgba(79, 172, 254, 1)',
+                        backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Refresh insights
+        function refreshInsights() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        }
+
+        // Generate report
+        function generateReport() {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 3000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            
+            // Animate progress bars on load
+            setTimeout(() => {
+                const progressBars = document.querySelectorAll('.progress-fill');
+                progressBars.forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

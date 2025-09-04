@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Verify Email</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .animate-bounce-in {
+            animation: bounceIn 0.8s ease-out;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success state */
+        .success-state {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Error state */
+        .error-state {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Pending state */
+        .pending-state {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Email animation */
+        .email-sent-animation {
+            animation: emailSent 2s ease-in-out;
+        }
+
+        @keyframes emailSent {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Checkmark animation */
+        .checkmark-animation {
+            animation: checkmark 0.8s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        /* Floating elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .floating-code {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+        }
+
+        /* Countdown timer */
+        .countdown-timer {
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .verification-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="gradient-bg flex items-center justify-center p-4">
+    <!-- Floating Code Elements -->
+    <div class="floating-element top-10 left-10 animate-float floating-code">
+        const token = getVerificationToken();
+    </div>
+    <div class="floating-element top-20 right-20 animate-float floating-code" style="animation-delay: -2s;">
+        await verifyEmail(token);
+    </div>
+    <div class="floating-element bottom-20 left-20 animate-float floating-code" style="animation-delay: -4s;">
+        user.emailVerified = true;
+    </div>
+    <div class="floating-element bottom-10 right-10 animate-float floating-code" style="animation-delay: -1s;">
+        // Welcome to DevSage!
+    </div>
+
+    <!-- Main Container -->
+    <div class="verification-container glass rounded-3xl p-8 w-full max-w-md animate-slide-up">
+        <!-- Verification Pending State -->
+        <div id="pendingState" class="text-center">
+            <div class="mb-8 animate-fade-in">
+                <div class="pending-state p-6 rounded-2xl inline-block mb-4">
+                    <i class="fas fa-envelope text-white text-4xl email-sent-animation"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Check Your Email</h1>
+                <p class="text-white text-opacity-70">We've sent a verification link to</p>
+                <p id="userEmail" class="text-blue-400 font-medium mt-1">user@example.com</p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+                <h3 class="font-medium text-white mb-4">Verification Steps</h3>
+                <div class="space-y-3 text-sm text-white text-opacity-80 text-left">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-500 bg-opacity-20 p-1 rounded-full mt-0.5">
+                            <i class="fas fa-check text-blue-400 text-xs"></i>
+                        </div>
+                        <span>Check your email inbox (and spam folder)</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-500 bg-opacity-20 p-1 rounded-full mt-0.5">
+                            <i class="fas fa-check text-blue-400 text-xs"></i>
+                        </div>
+                        <span>Click the "Verify Email" button in the email</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-500 bg-opacity-20 p-1 rounded-full mt-0.5">
+                            <i class="fas fa-check text-blue-400 text-xs"></i>
+                        </div>
+                        <span>Return here to complete your setup</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resend Options -->
+            <div class="space-y-4 animate-fade-in" style="animation-delay: 0.2s;">
+                <p class="text-white text-opacity-60 text-sm">
+                    Didn't receive the email?
+                </p>
+                <div class="flex gap-3">
+                    <button
+                        id="resendButton"
+                        class="btn-secondary flex-1 py-3 rounded-xl text-white font-medium"
+                    >
+                        <span id="resendButtonText">Resend Email</span>
+                        <i id="resendSpinner" class="fas fa-spinner spinner ml-2 hidden"></i>
+                    </button>
+                    <button
+                        id="changeEmailButton"
+                        class="btn-secondary flex-1 py-3 rounded-xl text-white font-medium"
+                    >
+                        Change Email
+                    </button>
+                </div>
+            </div>
+
+            <!-- Auto-check Status -->
+            <div class="mt-6 glass rounded-xl p-4 animate-fade-in" style="animation-delay: 0.3s;">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-sync-alt text-blue-400 animate-pulse-slow"></i>
+                        <span class="text-white text-sm">Auto-checking verification status</span>
+                    </div>
+                    <div class="countdown-timer" id="countdown">30</div>
+                </div>
+                <div class="mt-2">
+                    <div class="w-full bg-white bg-opacity-10 rounded-full h-1">
+                        <div class="bg-blue-500 h-1 rounded-full transition-all duration-1000" id="progressBar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Processing State -->
+        <div id="processingState" class="text-center hidden">
+            <div class="mb-8 animate-fade-in">
+                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-6 rounded-2xl inline-block mb-4">
+                    <i class="fas fa-spinner spinner text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Verifying Email</h1>
+                <p class="text-white text-opacity-70">Please wait while we verify your email address...</p>
+            </div>
+
+            <!-- Processing Steps -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-spinner spinner text-white text-xs"></i>
+                        </div>
+                        <span class="text-white text-sm">Validating verification token</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs">2</span>
+                        </div>
+                        <span class="text-white text-opacity-50 text-sm">Updating account status</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs">3</span>
+                        </div>
+                        <span class="text-white text-opacity-50 text-sm">Preparing your dashboard</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Success State -->
+        <div id="successState" class="text-center hidden">
+            <div class="mb-8 animate-bounce-in">
+                <div class="success-state p-6 rounded-2xl inline-block mb-4">
+                    <i class="fas fa-check-circle text-white text-4xl checkmark-animation"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Email Verified!</h1>
+                <p class="text-white text-opacity-70">Your account has been successfully verified</p>
+            </div>
+
+            <!-- Account Status -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+                <h3 class="font-medium text-white mb-4">Account Status</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-opacity-70">Email Verification</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span class="text-green-400 font-medium">Verified</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-opacity-70">Account Status</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            <span class="text-green-400 font-medium">Active</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-white text-opacity-70">Profile Setup</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-clock text-yellow-400"></i>
+                            <span class="text-yellow-400 font-medium">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Welcome Message -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.2s;">
+                <h3 class="font-medium text-white mb-4">Welcome to DevSage!</h3>
+                <div class="space-y-3 text-sm text-white text-opacity-80 text-left">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-rocket text-blue-400 mt-0.5"></i>
+                        <span>Start analyzing your code with AI-powered insights</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-users text-purple-400 mt-0.5"></i>
+                        <span>Collaborate with your team on projects</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-chart-line text-green-400 mt-0.5"></i>
+                        <span>Track your development progress and metrics</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue Button -->
+            <button
+                id="continueButton"
+                class="btn-primary w-full py-3 rounded-xl text-white font-medium animate-fade-in"
+                style="animation-delay: 0.3s;"
+            >
+                <i class="fas fa-arrow-right mr-2"></i>
+                Continue to Dashboard
+            </button>
+        </div>
+
+        <!-- Verification Error State -->
+        <div id="errorState" class="text-center hidden">
+            <div class="mb-8 animate-fade-in">
+                <div class="error-state p-6 rounded-2xl inline-block mb-4">
+                    <i class="fas fa-times-circle text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-2">Verification Failed</h1>
+                <p class="text-white text-opacity-70">Unable to verify your email address</p>
+            </div>
+
+            <!-- Error Details -->
+            <div class="glass-dark rounded-xl p-6 mb-6 animate-fade-in" style="animation-delay: 0.1s;">
+                <h3 class="font-medium text-white mb-4">What went wrong?</h3>
+                <div class="text-left space-y-3 text-sm text-white text-opacity-80">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-red-400 mt-0.5"></i>
+                        <span id="errorMessage">The verification link has expired or is invalid</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-400 mt-0.5"></i>
+                        <span>Verification links expire after 24 hours for security</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-shield-alt text-green-400 mt-0.5"></i>
+                        <span>Your account is safe and no data was compromised</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retry Options -->
+            <div class="space-y-3 animate-fade-in" style="animation-delay: 0.2s;">
+                <button
+                    id="requestNewVerification"
+                    class="btn-primary w-full py-3 rounded-xl text-white font-medium"
+                >
+                    <i class="fas fa-envelope mr-2"></i>
+                    Send New Verification Email
+                </button>
+                <button
+                    id="contactSupport"
+                    class="btn-secondary w-full py-3 rounded-xl text-white font-medium"
+                >
+                    <i class="fas fa-life-ring mr-2"></i>
+                    Contact Support
+                </button>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 text-center animate-fade-in" style="animation-delay: 0.4s;">
+            <p class="text-white text-opacity-50 text-sm">
+                <i class="fas fa-question-circle mr-2"></i>
+                Need help? <a href="#" class="text-blue-400 hover:text-blue-300">Contact Support</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const verificationToken = urlParams.get('token');
+        const email = urlParams.get('email') || 'user@example.com';
+
+        // State elements
+        const pendingState = document.getElementById('pendingState');
+        const processingState = document.getElementById('processingState');
+        const successState = document.getElementById('successState');
+        const errorState = document.getElementById('errorState');
+
+        // Auto-check variables
+        let autoCheckInterval;
+        let countdownInterval;
+        let countdownValue = 30;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set user email
+            document.getElementById('userEmail').textContent = email;
+            
+            if (verificationToken) {
+                // Direct verification from email link
+                processVerification(verificationToken);
+            } else {
+                // Show pending state and start auto-checking
+                showPendingState();
+                startAutoCheck();
+            }
+            
+            // Initialize button handlers
+            initializeButtonHandlers();
+        });
+
+        // Show pending state
+        function showPendingState() {
+            pendingState.classList.remove('hidden');
+        }
+
+        // Start auto-checking for verification
+        function startAutoCheck() {
+            startCountdown();
+            
+            autoCheckInterval = setInterval(async () => {
+                try {
+                    const isVerified = await checkVerificationStatus();
+                    if (isVerified) {
+                        clearIntervals();
+                        showSuccessState();
+                    }
+                } catch (error) {
+                    console.log('Auto-check failed:', error);
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        // Start countdown timer
+        function startCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            const progressBar = document.getElementById('progressBar');
+            
+            countdownInterval = setInterval(() => {
+                countdownValue--;
+                countdownElement.textContent = countdownValue;
+                
+                // Update progress bar
+                const progress = (countdownValue / 30) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                if (countdownValue <= 0) {
+                    countdownValue = 30; // Reset countdown
+                }
+            }, 1000);
+        }
+
+        // Clear all intervals
+        function clearIntervals() {
+            if (autoCheckInterval) clearInterval(autoCheckInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
+        }
+
+        // Check verification status
+        async function checkVerificationStatus() {
+            return new Promise((resolve, reject) => {
+                // Simulate API call to check verification status
+                setTimeout(() => {
+                    // Random chance of being verified (for demo)
+                    const isVerified = Math.random() < 0.1; // 10% chance per check
+                    resolve(isVerified);
+                }, 1000);
+            });
+        }
+
+        // Process verification from email link
+        async function processVerification(token) {
+            showProcessingState();
+            
+            try {
+                // Simulate verification process
+                await simulateVerificationSteps();
+                showSuccessState();
+            } catch (error) {
+                showErrorState(error.type || 'invalid_token');
+            }
+        }
+
+        // Show processing state
+        function showProcessingState() {
+            pendingState.classList.add('hidden');
+            processingState.classList.remove('hidden');
+            clearIntervals();
+        }
+
+        // Simulate verification steps
+        async function simulateVerificationSteps() {
+            const steps = [
+                { id: 1, message: 'Validating verification token', delay: 1500 },
+                { id: 2, message: 'Updating account status', delay: 1200 },
+                { id: 3, message: 'Preparing your dashboard', delay: 1000 }
+            ];
+            
+            for (const step of steps) {
+                await new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        // Simulate random failure for demo
+                        if (verificationToken === 'expired123' && step.id === 1) {
+                            reject({ type: 'expired_token' });
+                        } else if (verificationToken === 'invalid123' && step.id === 1) {
+                            reject({ type: 'invalid_token' });
+                        } else {
+                            updateProcessingStep(step.id, step.message);
+                            resolve();
+                        }
+                    }, step.delay);
+                });
+            }
+        }
+
+        // Update processing step
+        function updateProcessingStep(stepNumber, message) {
+            const steps = document.querySelectorAll('#processingState .flex');
+            
+            steps.forEach((step, index) => {
+                const stepNum = index + 1;
+                const icon = step.querySelector('div');
+                const text = step.querySelector('span');
+                
+                if (stepNum < stepNumber) {
+                    // Completed step
+                    icon.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
+                    icon.className = 'w-6 h-6 bg-green-500 rounded-full flex items-center justify-center';
+                    text.className = 'text-white text-sm';
+                } else if (stepNum === stepNumber) {
+                    // Current step
+                    icon.innerHTML = '<i class="fas fa-spinner spinner text-white text-xs"></i>';
+                    icon.className = 'w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center';
+                    text.className = 'text-white text-sm';
+                    text.textContent = message;
+                }
+            });
+        }
+
+        // Show success state
+        function showSuccessState() {
+            pendingState.classList.add('hidden');
+            processingState.classList.add('hidden');
+            successState.classList.remove('hidden');
+            clearIntervals();
+        }
+
+        // Show error state
+        function showErrorState(errorType) {
+            pendingState.classList.add('hidden');
+            processingState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            clearIntervals();
+            
+            const errorMessages = {
+                'expired_token': 'The verification link has expired',
+                'invalid_token': 'The verification link is invalid or has been used',
+                'user_not_found': 'No account found for this verification request',
+                'already_verified': 'This email address has already been verified',
+                'server_error': 'A server error occurred during verification',
+                'network_error': 'Unable to connect to verification service'
+            };
+            
+            const message = errorMessages[errorType] || 'An unexpected error occurred';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // Initialize button handlers
+        function initializeButtonHandlers() {
+            // Resend email button
+            document.getElementById('resendButton').addEventListener('click', async function() {
+                const button = this;
+                const buttonText = document.getElementById('resendButtonText');
+                const spinner = document.getElementById('resendSpinner');
+                
+                button.disabled = true;
+                buttonText.textContent = 'Sending...';
+                spinner.classList.remove('hidden');
+                
+                try {
+                    // Simulate resend API call
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    buttonText.textContent = 'Email Sent!';
+                    spinner.classList.add('hidden');
+                    button.classList.remove('btn-secondary');
+                    button.classList.add('bg-green-500');
+                    
+                    setTimeout(() => {
+                        button.disabled = false;
+                        buttonText.textContent = 'Resend Email';
+                        spinner.classList.add('hidden');
+                        button.classList.add('btn-secondary');
+                        button.classList.remove('bg-green-500');
+                    }, 3000);
+                    
+                } catch (error) {
+                    button.disabled = false;
+                    buttonText.textContent = 'Resend Email';
+                    spinner.classList.add('hidden');
+                }
+            });
+
+            // Change email button
+            document.getElementById('changeEmailButton').addEventListener('click', function() {
+                window.location.href = '/signup';
+            });
+
+            // Continue button
+            document.getElementById('continueButton').addEventListener('click', function() {
+                window.location.href = '/dashboard';
+            });
+
+            // Request new verification
+            document.getElementById('requestNewVerification').addEventListener('click', async function() {
+                const button = this;
+                const originalText = button.innerHTML;
+                
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner spinner mr-2"></i>Sending...';
+                
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    button.innerHTML = '<i class="fas fa-check mr-2"></i>Email Sent!';
+                    button.classList.remove('btn-primary');
+                    button.classList.add('bg-green-500');
+                    
+                    setTimeout(() => {
+                        // Return to pending state
+                        errorState.classList.add('hidden');
+                        pendingState.classList.remove('hidden');
+                        startAutoCheck();
+                        
+                        button.disabled = false;
+                        button.innerHTML = originalText;
+                        button.classList.add('btn-primary');
+                        button.classList.remove('bg-green-500');
+                    }, 2000);
+                    
+                } catch (error) {
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            });
+
+            // Contact support
+            document.getElementById('contactSupport').addEventListener('click', function() {
+                window.location.href = 'mailto:support@devsage.com?subject=Email Verification Issue';
+            });
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            clearIntervals();
+        });
+
+        // Demo scenarios
+        console.log('Demo scenarios:');
+        console.log('- Add "?token=valid123&email=user@example.com" for successful verification');
+        console.log('- Add "?token=expired123&email=user@example.com" for expired token');
+        console.log('- Add "?token=invalid123&email=user@example.com" for invalid token');
+        console.log('- No token parameter shows pending state with auto-check');
+    </script>
+</body>
+
+</html>

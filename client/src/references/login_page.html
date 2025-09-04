@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSage - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom glassmorphism and animations */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Form styles */
+        .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn-oauth {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-oauth:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Checkbox styles */
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox:checked {
+            background: #4facfe;
+            border-color: #4facfe;
+        }
+
+        .custom-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Floating elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .floating-code {
+            font-family: 'Courier New', monospace;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Error states */
+        .form-error {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .error-message {
+            color: #fca5a5;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Success states */
+        .form-success {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg flex items-center justify-center p-4">
+    <!-- Floating Code Elements -->
+    <div class="floating-element top-10 left-10 animate-float floating-code">
+        const user = await login();
+    </div>
+    <div class="floating-element top-20 right-20 animate-float floating-code" style="animation-delay: -2s;">
+        if (authenticated) { redirect('/dashboard'); }
+    </div>
+    <div class="floating-element bottom-20 left-20 animate-float floating-code" style="animation-delay: -4s;">
+        import { DevSage } from 'ai-tools';
+    </div>
+    <div class="floating-element bottom-10 right-10 animate-float floating-code" style="animation-delay: -1s;">
+        // Welcome to DevSage
+    </div>
+
+    <!-- Main Login Container -->
+    <div class="login-container glass rounded-3xl p-8 w-full max-w-md animate-slide-up">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8 animate-fade-in">
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-2xl inline-block mb-4">
+                <i class="fas fa-brain text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+            <p class="text-white text-opacity-70">Sign in to your DevSage account</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-6">
+            <!-- Email/Username Field -->
+            <div class="animate-fade-in" style="animation-delay: 0.1s;">
+                <label for="email" class="block text-sm font-medium text-white mb-2">
+                    Email or Username
+                </label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email or username"
+                        class="form-input w-full px-4 py-3 pl-12 rounded-xl"
+                        required
+                    >
+                    <i class="fas fa-user absolute left-4 top-4 text-white text-opacity-60"></i>
+                </div>
+                <div id="email-error" class="error-message hidden"></div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="animate-fade-in" style="animation-delay: 0.2s;">
+                <label for="password" class="block text-sm font-medium text-white mb-2">
+                    Password
+                </label>
+                <div class="relative">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        class="form-input w-full px-4 py-3 pl-12 pr-12 rounded-xl"
+                        required
+                    >
+                    <i class="fas fa-lock absolute left-4 top-4 text-white text-opacity-60"></i>
+                    <button
+                        type="button"
+                        id="togglePassword"
+                        class="absolute right-4 top-4 text-white text-opacity-60 hover:text-white transition-colors"
+                    >
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div id="password-error" class="error-message hidden"></div>
+            </div>
+
+            <!-- Remember Me and Forgot Password -->
+            <div class="flex items-center justify-between animate-fade-in" style="animation-delay: 0.3s;">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="rememberMe" class="custom-checkbox">
+                    <span class="text-sm text-white text-opacity-80">Remember me</span>
+                </label>
+                <a href="#" id="forgotPassword" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                    Forgot password?
+                </a>
+            </div>
+
+            <!-- Login Button -->
+            <button
+                type="submit"
+                id="loginButton"
+                class="btn-primary w-full py-3 rounded-xl text-white font-medium animate-fade-in"
+                style="animation-delay: 0.4s;"
+            >
+                <span id="loginButtonText">Sign In</span>
+                <i id="loginSpinner" class="fas fa-spinner spinner ml-2 hidden"></i>
+            </button>
+
+            <!-- Error Message -->
+            <div id="loginError" class="hidden p-4 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle text-red-400"></i>
+                    <span id="loginErrorText" class="text-red-200 text-sm"></span>
+                </div>
+            </div>
+        </form>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-4 my-8 animate-fade-in" style="animation-delay: 0.5s;">
+            <div class="flex-1 h-px bg-white bg-opacity-20"></div>
+            <span class="text-white text-opacity-60 text-sm">or continue with</span>
+            <div class="flex-1 h-px bg-white bg-opacity-20"></div>
+        </div>
+
+        <!-- OAuth Buttons -->
+        <div class="space-y-3 animate-fade-in" style="animation-delay: 0.6s;">
+            <!-- GitHub -->
+            <button
+                type="button"
+                onclick="loginWithOAuth('github')"
+                class="btn-oauth w-full py-3 px-4 rounded-xl text-white font-medium flex items-center justify-center gap-3"
+            >
+                <i class="fab fa-github text-xl"></i>
+                <span>Continue with GitHub</span>
+            </button>
+
+            <!-- GitLab -->
+            <button
+                type="button"
+                onclick="loginWithOAuth('gitlab')"
+                class="btn-oauth w-full py-3 px-4 rounded-xl text-white font-medium flex items-center justify-center gap-3"
+            >
+                <i class="fab fa-gitlab text-xl text-orange-400"></i>
+                <span>Continue with GitLab</span>
+            </button>
+
+            <!-- Bitbucket -->
+            <button
+                type="button"
+                onclick="loginWithOAuth('bitbucket')"
+                class="btn-oauth w-full py-3 px-4 rounded-xl text-white font-medium flex items-center justify-center gap-3"
+            >
+                <i class="fab fa-bitbucket text-xl text-blue-400"></i>
+                <span>Continue with Bitbucket</span>
+            </button>
+        </div>
+
+        <!-- Sign Up Link -->
+        <div class="text-center mt-8 animate-fade-in" style="animation-delay: 0.7s;">
+            <p class="text-white text-opacity-70">
+                Don't have an account?
+                <a href="#" id="signupLink" class="text-blue-400 hover:text-blue-300 transition-colors font-medium ml-1">
+                    Sign up for free
+                </a>
+            </p>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="text-center mt-6 animate-fade-in" style="animation-delay: 0.8s;">
+            <p class="text-white text-opacity-50 text-sm">
+                <i class="fas fa-users mr-2"></i>
+                Join 10,000+ developers using DevSage
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Form elements
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('loginButton');
+        const loginButtonText = document.getElementById('loginButtonText');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const loginError = document.getElementById('loginError');
+        const loginErrorText = document.getElementById('loginErrorText');
+        const togglePassword = document.getElementById('togglePassword');
+        const rememberMe = document.getElementById('rememberMe');
+
+        // Password visibility toggle
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+        });
+
+        // Form validation
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+            return emailRegex.test(email) || usernameRegex.test(email);
+        }
+
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + '-error');
+            
+            field.classList.add('form-error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + '-error');
+            
+            field.classList.remove('form-error');
+            field.classList.add('form-success');
+            errorDiv.classList.add('hidden');
+        }
+
+        function showLoginError(message) {
+            loginErrorText.textContent = message;
+            loginError.classList.remove('hidden');
+        }
+
+        function hideLoginError() {
+            loginError.classList.add('hidden');
+        }
+
+        // Real-time validation
+        emailInput.addEventListener('input', function() {
+            if (this.value && !validateEmail(this.value)) {
+                showFieldError('email', 'Please enter a valid email or username');
+            } else if (this.value) {
+                clearFieldError('email');
+            }
+        });
+
+        passwordInput.addEventListener('input', function() {
+            if (this.value && !validatePassword(this.value)) {
+                showFieldError('password', 'Password must be at least 6 characters');
+            } else if (this.value) {
+                clearFieldError('password');
+            }
+        });
+
+        // Form submission
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Clear previous errors
+            hideLoginError();
+            document.querySelectorAll('.form-error').forEach(el => el.classList.remove('form-error'));
+            document.querySelectorAll('.error-message').forEach(el => el.classList.add('hidden'));
+            
+            // Validate fields
+            let hasErrors = false;
+            
+            if (!email) {
+                showFieldError('email', 'Email or username is required');
+                hasErrors = true;
+            } else if (!validateEmail(email)) {
+                showFieldError('email', 'Please enter a valid email or username');
+                hasErrors = true;
+            }
+            
+            if (!password) {
+                showFieldError('password', 'Password is required');
+                hasErrors = true;
+            } else if (!validatePassword(password)) {
+                showFieldError('password', 'Password must be at least 6 characters');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) return;
+            
+            // Show loading state
+            loginButton.disabled = true;
+            loginButtonText.textContent = 'Signing In...';
+            loginSpinner.classList.remove('hidden');
+            
+            try {
+                // Simulate API call
+                await simulateLogin(email, password);
+                
+                // Success - redirect to dashboard
+                loginButtonText.textContent = 'Success!';
+                loginSpinner.classList.add('hidden');
+                loginButton.classList.remove('btn-primary');
+                loginButton.classList.add('bg-green-500');
+                
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+                
+            } catch (error) {
+                // Show error
+                showLoginError(error.message);
+                
+                // Reset button
+                loginButton.disabled = false;
+                loginButtonText.textContent = 'Sign In';
+                loginSpinner.classList.add('hidden');
+            }
+        });
+
+        // Simulate login API call
+        async function simulateLogin(email, password) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // Simulate different scenarios
+                    if (email === 'demo@devsage.com' && password === 'demo123') {
+                        resolve({ success: true, user: { email, name: 'Demo User' } });
+                    } else if (email === 'error@test.com') {
+                        reject(new Error('Account temporarily locked. Please try again later.'));
+                    } else if (password.length < 6) {
+                        reject(new Error('Password is too short'));
+                    } else {
+                        reject(new Error('Invalid email or password. Please check your credentials and try again.'));
+                    }
+                }, 1500);
+            });
+        }
+
+        // OAuth login
+        async function loginWithOAuth(provider) {
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = `<i class="fas fa-spinner spinner mr-3"></i>Connecting to ${provider}...`;
+            
+            try {
+                // Simulate OAuth flow
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Open OAuth popup (in real app)
+                const popup = window.open(
+                    `https://oauth.${provider}.com/authorize?client_id=devsage&redirect_uri=${encodeURIComponent(window.location.origin)}/auth/callback`,
+                    'oauth',
+                    'width=600,height=600,scrollbars=yes,resizable=yes'
+                );
+                
+                // Listen for popup close (simplified)
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        // In real app, check for auth success
+                        window.location.href = '/dashboard';
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                showLoginError(`Failed to connect with ${provider}. Please try again.`);
+            } finally {
+                // Reset button
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+
+        // Link handlers
+        document.getElementById('forgotPassword').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/forgot-password';
+        });
+
+        document.getElementById('signupLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/signup';
+        });
+
+        // Remember me functionality
+        window.addEventListener('load', function() {
+            const rememberedEmail = localStorage.getItem('rememberedEmail');
+            if (rememberedEmail) {
+                emailInput.value = rememberedEmail;
+                rememberMe.checked = true;
+            }
+        });
+
+        loginForm.addEventListener('submit', function() {
+            if (rememberMe.checked) {
+                localStorage.setItem('rememberedEmail', emailInput.value);
+            } else {
+                localStorage.removeItem('rememberedEmail');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Enter to submit form
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'INPUT' && activeElement.form === loginForm) {
+                    e.preventDefault();
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        // Demo credentials hint
+        console.log('Demo credentials: demo@devsage.com / demo123');
+    </script>
+</body>
+
+</html>
