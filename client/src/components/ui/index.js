@@ -8,6 +8,7 @@ export { default as Button, ButtonGroup, IconButton, FloatingActionButton } from
 export { default as Input, Textarea } from './Input';
 export { default as Card, CardHeader, CardBody, CardFooter, MetricCard, FeatureCard, CardGrid } from './Card';
 export { default as Modal, ModalHeader, ModalBody, ModalFooter, ConfirmModal, AlertModal } from './Modal';
+export { default as Checkbox, CheckboxGroup } from './Checkbox';
 export {
     default as Badge,
     StatusBadge,
